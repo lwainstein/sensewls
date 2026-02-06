@@ -21,7 +21,7 @@ library(sensewls)
 
 # sensewls
 
-Please contact Leonard Wainstein (lwainstein@reed.edu) with questions. Thank you to Wolfgang Brightenburg (wbrigh@uw.edu) for creating the initial versions of this package and README. 
+Please contact Leonard Wainstein (lwainstein@reed.edu) with questions. Thank you to Wolfgang Brightenburg (wbrigh@uw.edu) for creating the initial versions of this package and its README. 
 
 ## Overview
 
