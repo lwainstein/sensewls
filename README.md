@@ -5,7 +5,7 @@
 
 Please contact Leonard Wainstein (<lwainstein@reed.edu>) with questions.
 Thank you to Wolfgang Brightenburg (<wbrigh@uw.edu>) for creating the
-initial versions of this package and README.
+initial versions of this package and its README.
 
 ## Overview
 
@@ -437,7 +437,7 @@ bootstrap.
 ### Check point estimates
 output_customewights$wls_data
 #> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02560592   0.03679776   0.13921057
+#>   0.08936507   0.02613541   0.03697425   0.13804491
 sensewls_darfur$wls_data
 #> WLS_estimate       Est_SE        Lower        Upper 
 #>   0.08936507   0.02616902   0.03616962   0.13764840
@@ -453,10 +453,10 @@ sensewls_darfur$RVs
 ### Check covariate bounds
 output_customewights$Covariate_Bound_Estimates
 #>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.016035060 0.11892515   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2  0.007767949 0.11023750   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3  0.007606870 0.11006746   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.004989024 0.09792971   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#> female.1  0.016215482 0.11775399   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2  0.007626722 0.10934424   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3  0.007458912 0.10917963   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4 -0.004733950 0.09722787   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
 sensewls_darfur$Covariate_Bound_Estimates
 #>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
 #> female.1  0.015446243 0.11735805   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
