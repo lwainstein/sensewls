@@ -1,0 +1,381 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+options(width = 300)
+library(tidyverse)
+library(sensemakr)
+library(sensewls)
+```
+
+
+
+# sensewls
+
+Please contact Leonard Wainstein (lwainstein@reed.edu) with questions. Thank you to Wolfgang Brightenburg (wbrigh@uw.edu) for creating the initial versions of this package and README. 
+
+## Overview
+
+Researchers often seek the causal effect of a treatment, $D$, on an outcome of interest, $Y$. 
+In observational settings, estimating this unbiasedly requires accounting for all of the confounders in the relationship between the treatment and the outcome. 
+One common estimation approach here is a weighted least squares (WLS) linear regression of the outcome on the treatment and some observed covariates, $X$, where the weighting is meant to reduce dependence on the estimated linear model ([Ho et al., 2007](https://www.cambridge.org/core/journals/political-analysis/article/matching-as-nonparametric-preprocessing-for-reducing-model-dependence-in-parametric-causal-inference/4D7E6D07C9727F5A604E5C9FCCA2DD21)). 
+However, even before considering violations to modeling assumptions implied by the linear regression or the weights, a first order concern is the risk of unobserved confounding that leads to persistent biases regardless of the conditioning technology used. The claim that all variables that must be accounted for to achieve unbiasedness is unlikely to hold in most real-world cases. The resulting bias in the estimate will be driven by the extent to which unobserved confounders, $Z$, are related to the treatment and outcome conditionally on the covariates. Transparency thus requires that we assess the sensitivity of one's conclusions to unobserved confounding, i.e., "sensitivity analysis".
+
+The `sensewls` package implements the sensitivity analysis tools
+proposed by [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954), in which standardized statistics and covariate bounds are introduced to quantify the
+sensitivity of WLS estimates of causal estimands to unobserved
+confounding. These tools are the weighted extension to the tools proposed by [Cinelli and Hazlett (2020)](https://academic.oup.com/jrsssb/article/82/1/39/7056023), which are implemented through the [`sensemakr`](https://cran.r-project.org/web/packages/sensemakr/index.html) package. These tools allow researchers to quantify how strong an unobserved
+confounder (or group of confounders) would need to be in order to change
+research conclusions, with strength measured in either absolute terms
+through weighted partial correlation, or in relative terms, measured in
+relation to the strength of observed covariate(s).
+
+To demonstrate the general workflow of `sensewls` and its reliance on domain
+knowledge, we provide the following tutorial through an extended
+example, studying the average effects of exposure to violence in Darfur
+on attitudes towards peace. The data is accessed through the `sensemakr` package. The following example is a replication of the analysis done by [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954). Further details and discussion on this setting can be found in [Hazlett (2020)](https://journals.sagepub.com/doi/abs/10.1177/0022002719879217).
+
+## Installation
+
+You can install the development version of `sensewls` from [GitHub](https://github.com/) with:
+
+```{r, echo=TRUE, eval=FALSE}
+# install.packages("devtools")
+devtools::install_github("lwainstein/sensewls")
+```
+
+
+## Example
+
+
+The `sensewls` function takes in a variety of arguments. For specifying the variables of interest, the function has the following four
+arguments:
+
+-   `df` A dataframe containing `treatment`, `outcome`, and `covars`.
+
+-   `treatment` A string indicating the column name of the treatment
+    variable.
+
+-   `outcome` A string indicating the column name of the outcome
+    variable.
+
+-   `covars` A character vector of column names of the relevant
+    covariates in the dataframe to use in the regression.
+
+To specify the weighting mechanism or weights, we must specify:
+
+-   `w` An argument for the weighting method, which may be (1) a
+    numeric vector of weights; (2) a string for one of the preset weighting
+    functions; or (3) a custom weighting function. For a
+    preset weighting method, three mechanisms are currently implemented.
+    A simple implementation of inverse propensity score weights through a
+    logistic regression of the treatment on all covariates may be used through setting
+    `w` to the string `"prop_score"`. Additionally, the `matchit()`
+    function from the [`MatchIt`](https://cran.r-project.org/web/packages/MatchIt/index.html) package and the entropy balancing
+    weights function `ebalance()` from the [`ebal`](https://cran.r-project.org/web/packages/ebal/index.html) package may be used by
+    setting `w` to the strings `"matchit"` and `"ebal"`, respectively.
+    Additional arguments to these methods may be passed at the end of
+    the `sensewls` call. Further information on custom weight functions can
+    be found in the custom weight function section of this README.
+
+-   `estimand` A string indicating the desired estimand. Only necessary
+    if `w` is a preset weighting method.
+
+-   `normalize` A logical indicating whether or not to normalize the weights `w` per [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954) when either 
+    providing a numeric vector of weights, or a custom weighting function. Weights are 
+    automatically normalized when `w` is a preset weighting method.
+
+To relate an unobserved confounder's strength to that of one or multiple
+observed covariates, we need to supply `sensewls` the following arguments:
+
+-   `bounding_covars` A list of character vectors containing covariates
+    to bound by.
+
+-   `semiweights` An optional list of semiweight vectors if `w` is a
+    numeric weights vector. Providing semiweights is necessary for computing
+    covariate bounds, and omitting a weight function to calculate them
+    requires to the user to supply them directly. The semiweights list
+    should be sorted such that the $i$th entry corresponds to the set
+    of semiweights formed when constructing weights while omitting the
+    $i$th set of covariates in the `bounding_covars` list.
+
+-   `kd` A numeric vector of considered covariate bound strengths for association with the treatment variable.
+
+-   `ky` A numeric vector of considered covariate bound strengths for association with the outcome variable.
+
+
+To compute confidence intervals and $RV_{\alpha}$, `sensewls` takes the
+following six arguments:
+
+-   `inference` Whether to obtain uncertainty estimates. If set to the logical `TRUE`,
+    a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
+    preset weights or an appropriate weighting function are chosen for `w`. If set to character
+    `"fixed"`, then a non-parametric bootstrap is performed that does NOT re-estimate the weights, and samples them
+    along with the data in each bootstrap sample. The percentile method is used for all bootstrap confidence intervals.
+    If set to the logical `FALSE`, then no uncertainty estimates are provided. Default is `FALSE`.
+
+-   `cluster` An optional string indicating a column from the dataframe `df` for which to perform a cluster bootstrap if desired.
+    `inference` must be set to `TRUE` or `"fixed"`. Defaulted to `NULL`.
+
+-   `alpha` Level of significance used for $RV_{\alpha}$ and the
+    confidence intervals. Defaulted to `alpha = 0.05`.
+
+-   `B` Number of bootstrap samples if used. Defaulted to 500.
+
+-   `par` Boolean for whether bootstrapping should be parallelized
+    through the `parallel` library. Defaulted to `FALSE`. Only supported
+    on MacOS.
+
+-   `ncpus` Number of cpus used if `par` is set to `TRUE`. Defaulted to
+    `NULL` and must be supplied if `par` is set to true.
+
+We will now use the `sensewls` function to perform a sensitivity analysis on
+a WLS estimate of the ATE using inverse propensity score weights. Note
+that the exchangeable unit in this setting is not the individual
+respondent, but rather the village that they reside in. Hence, we
+utilize a cluster bootstrap as our method of inference, specifying such
+through setting the `inference` argument to `TRUE` and providing
+the clustering variable `village` as the value for the `cluster` argument.
+Omitting an input to `cluster` while utilizing a bootstrap method for inference
+defaults to the nonparametric bootstrap where individual rows are
+resampled instead of sampling whole groups.
+
+```{r}
+### Read in data
+library(sensemakr)
+data(darfur)
+
+### Only retain villages in which there are both treated/control
+meantreat <- tapply(darfur$directlyharmed, darfur$village, FUN = mean)
+meantreat <- meantreat[!is.na(meantreat)]
+tvar <- names(meantreat[meantreat>0 & meantreat<1])
+tvar <- sort(tvar)
+tvar <- data.frame("village" = tvar)
+df<- merge(tvar, darfur)
+
+### Run sensitivity analysis 
+set.seed(1)
+sensewls_darfur <- sensewls(
+                    df = df,
+                    treatment = "directlyharmed",
+                    outcome = "peacefactor", 
+                    covars = c("village",
+                                "female",
+                                "age", 
+                                "farmer_dar",
+                                "herder_dar",
+                                "pastvoted",
+                                "hhsize_darfur"), 
+                    bounding_covars = list("female" = c("female")), 
+                    kd = 1:2,
+                    ky = 1:2, 
+                    w = "prop_score",
+                    semiweights = NULL,
+                    estimand = "ATE",
+                    inference = TRUE, 
+                    cluster = "village",
+                    par = F,
+                    B = 1000
+                  )
+```
+
+We can inspect the WLS estimate, standard error, and confidence interval by calling:
+
+```{r}
+sensewls_darfur$wls_data
+```
+
+This estimation approach indicates that direct harm positively influence attitudes toward peace, and that the estimate is statistically significant at the $\alpha = 0.05$ level.
+
+### Sensitivity Statistics
+
+For the minimal study of the sensitivity of the WLS estimate, the `sensewls` call
+returns three key sensitivity statistics to complement the standard
+regression outputs of the effect estimate, estimated standard error, and
+a confidence interval:
+
+```{r}
+sensewls_darfur$RV
+```
+
+These sensitivity statistics include: (1) $R^2_w(Y\sim D|X)$, the weighted
+partial $R^2$ between the treatment and outcome conditional on
+the covariates (`wR2.YD.X`); (2) the robustness value $RV_{q=1}$, or the strength of the unobserved confounding necessary to reduce the
+estimated effect to zero (`RV_{q=1}`); and (3) the robustness value $RV_{\alpha}$, or the strength of the unobserved confounding
+necessary to reduce the estimated effect as to be statistically
+indistinguistable from a null effect at the $\alpha$ significance level (here, `RV_{alpha=0.05}`).
+In detail,
+
+(1) $R^2_w(Y\sim D|X)$ serves as the
+    minimal amount of weighted residual variance needed to be explained
+    by a confounder in order the nullify the observed effect, under the
+    extreme scenario in which the confounder is responsible for all
+    noise in the regression on the outcome. The observed weighted
+    partial correlation $R^2_w(Y\sim D|X) = 0.022$ may be interpreted such
+    that, in the extreme scenario in which we assume that some
+    unobserved confounders fully explain all of the unaccounted variance
+    in the outcome `peacefactor`, these same confounders would need to
+    explain at least 2.2% of the variance in the treatment to nullify
+    the observed effect.
+
+(2) The robustness value $RV_{q=1}$ quantifies how much the unobserved
+    strengths $R^2_{w}(Y\sim Z|X, D)$ and $R^2_{w}(D \sim Z|X)$
+    need to be in order to nullify the estimated effect, presuming the
+    confounder exerts equal influence on the treatment and outcome
+    variables. In this setting, observing that $RV_{q=1} = 0.139%$ means an
+    unobserved confounder must explain at least 13.9% of the weighted
+    residual variance in both the treatment and outcome to reduce the
+    point estimate of the estimated effect to zero.
+
+(3) The robustness value $RV_{\alpha=0.05}$ quantifies how large the strengths $R^2_w (Y\sim Z|X, D)$ and $R^2_w (D \sim Z|X)$ need to be for
+    the WLS estimate to fail to be statistically distinguishable from
+    zero at the $\alpha=0.05$ significance level (presuming the confounder
+    influences the treatment and outcome equally). The observed value
+    of $RV_{\alpha=0.05} = 0.059$ posits that unobserved confounders which
+    account for 5.9% of the weighted residual variance have enough
+    influence to render the estimate statistically
+    insignificant.
+
+The above quantities may be used to summarize the strengths necessary
+for unaccounted confounders to alter the results of the analysis. Domain
+knowledge is necessary to argue whether possible confounders meet these
+criteria.
+
+### Covariate Bounds
+
+While the above sensitivity statistics report how strong unobserved confounders would need to be to change our results, they do not tell us if such confounders are plausible. For this, it is useful to consider relative claims on the strengths of
+unobserved confounders, such as an unobserved confounder being X times "as strong" as an observed covariate. To do this, we can inspect the covariate bound estimates with:
+
+```{r}
+sensewls_darfur$Covariate_Bound_Estimates
+```
+
+
+Our analysis reports an initial estimate that is positive and
+significant and the $\alpha = 0.05$ level, suggesting that direct harm
+increased attitudes towards peace. Additionally, the sign and
+significance of the ATE estimate are robust to a confounder as
+strong as `female`, a covariate argued to be influential for
+the treatment as discussed in [Hazlett (2020)](https://journals.sagepub.com/doi/abs/10.1177/0022002719879217). If such a confounder were
+present, it would have strengths $R_w^2 (D \sim Z | X) = 0.011$ and $R_w^2 (Y \sim Z | X, D) = 0.108$, and the adjusted estimate would remain
+positive (+0.069) and statistically significant at the 0.05 level. However, a confounder that is
+two times as strong as `female` would render our estimate
+statistically insignificant at the $\alpha = 0.05$ threshold, as the adjusted 95\% confidence interval (-0.006, 0.097) contains 0. 
+
+One may also visualize the adjusted estimates from these estimated covariate bounds using the `plot_sensewls()` function:
+```{r}
+plot_sensewls(sensewls_darfur, xlim = c(0,0.25), ylim = c(0,0.4))
+```
+
+### Changing values of $\alpha$ and $q$
+
+When utilizing the bootstrap for inference, it may be computationally
+expensive to re-compute analyses to investigate inference at varying
+significance levels. If we'd like to view our results when varying $\alpha$ (for $RV_{\alpha}$ and confidence intervals)
+or $q$ (for $RV_q$), we can use the `alter_sensewls()` function to adjust our robustness values
+and confidence intervals accordingly:
+
+```{r}
+### Alter output
+new_output <- alter_sensewls(sensewls_darfur, alpha = 0.01, q = 0.9)
+
+### Re-inspect results
+new_output$wls_data
+new_output$RVs
+new_output$Covariate_Bound_Estimates
+```
+
+Setting our Type I error rate to a higher standard of $\alpha = 0.01$,
+we find that our findings still, but just barely, support a statistically
+significant estimate when a confounder as strong as `female` is
+present.
+
+### Custom Weight Functions
+
+Beyond utilizing the preset weighting functions, `sensewls` supports users
+supplying their own custom weighting function, or vectors of weights and
+semiweights.
+
+Custom weight functions require a specific syntax, requiring the
+following three arguments: 
+
+- `treatment`, a string indicating the column name of the treatment variable.
+- `covars`, a character vector of the column names for the covariates to weight for.
+- `df`, a data frame containing the columns named by `treatment` and `covars`.
+
+Additionally, the weight function is expected to only output a vector of
+weights ordered such that the $i$th weight corresponds to the $i$th row
+in `df`. Below is an example of an implementation of an inverse propensity
+score weighting function for the ATE. Additionally, we use the `normalize=TRUE` 
+option in the `sensewls` function to normalize the weights per [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954).
+
+```{r}
+### Create custom inverse propensity score weighting function for the ATE
+custom_ipw <- function(treatment, covars, df){
+
+  psmodel <- glm(as.formula(paste(treatment,
+                                  " ~ ", 
+                                  paste(covars, collapse = "+"))), 
+                 family = binomial(link="logit"),
+                 data = df)
+
+  d <- df[, treatment]
+  weights <- rep(0, nrow(df))
+  weights[d==0] <- 1 / (1 - psmodel$fitted.values[d==0])
+  weights[d==1] <- 1 / psmodel$fitted.values[d==1]
+
+  return(weights)
+}
+
+### Run sensewls with the custom_ipw function
+set.seed(1)
+output_customewights <- sensewls(treatment = "directlyharmed",
+                  outcome = "peacefactor", 
+                  covars = c("village",
+                              "female",
+                              "age", 
+                              "farmer_dar",
+                              "herder_dar",
+                              "pastvoted",
+                              "hhsize_darfur"), 
+                  bounding_covars = list("female" = c("female")), 
+                  kd = 1:2,
+                  ky = 1:2,
+                  df = df, 
+                  w = custom_ipw,
+                  normalize = T,
+                  semiweights = NULL,
+                  inference = TRUE, 
+                  cluster = "village",
+                  B = 1000, 
+                  par = T, 
+                  ncpus = 5)
+```
+
+You will notice that the non-inference results are exactly the same as when using the default inverse propensity score weights for the ATE by `w = "prop_score"` and `estimand = "ATE"`. The inference-related results are very close, but have slight differences due to the randomness of the bootstrap. 
+
+```{r}
+### Check point estimates
+output_customewights$wls_data
+sensewls_darfur$wls_data
+
+### Check robustness values
+output_customewights$RVs
+sensewls_darfur$RVs
+
+### Check covariate bounds
+output_customewights$Covariate_Bound_Estimates
+sensewls_darfur$Covariate_Bound_Estimates
+
+```
+
+

@@ -1,0 +1,19 @@
+Package: sensewls
+Title: Sensitivity Analysis for Weighted Least Squares Estimators to Omitted Variables
+Version: 0.0.0.9000
+Authors@R: 
+    c(person("Leonard", "Wainstein", email = "lwainstein@reed.edu", role = c("aut", "cre")),
+	person("Wolfgang", "Brightenburg", email = "wbrigh@uw.edu", role = c("ctb"))
+     )
+Description: This package implements the sensitivity analysis tools, described in Wainstein and Hazlett (2025), for weighted least squares estimators of treatment effects to omitted variables.
+License: GPL (>= 3)
+Imports: 
+    MatchIt,
+    ebal,
+    ggrepel,
+    dplyr,
+    parallel,
+    ggplot2
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
