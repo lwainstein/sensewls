@@ -136,19 +136,20 @@ To compute confidence intervals and $RV_{\alpha}$, `sensewls` takes the
 following six arguments:
 
 -   `inference` Whether to obtain uncertainty estimates. If set to the
-    logical `TRUE`, a non-parametric bootstrap is performed that
-    re-estimates the weights in each bootstrap sample. This is only
-    allowed if preset weights or an appropriate weighting function are
-    chosen for `w`. If set to character `"fixed"`, then a non-parametric
-    bootstrap is performed that does NOT re-estimate the weights, and
-    samples them along with the data in each bootstrap sample. The
-    percentile method is used for all bootstrap confidence intervals. If
-    set to the logical `FALSE`, then no uncertainty estimates are
-    provided. Default is `FALSE`.
+    logical `TRUE`, then a non-parametric bootstrap is performed that
+    fixes the weights, and samples them along with the data in each
+    bootstrap sample. If set to the character `"reestimate"`, a
+    non-parametric bootstrap is performed that re-estimates the weights
+    in each bootstrap sample. This is only allowed if preset weights or
+    an appropriate weighting function are chosen for `w`. The percentile
+    method is used for all bootstrap confidence intervals. If set to the
+    logical `FALSE`, then no uncertainty estimates are provided. Default
+    is `TRUE`.
 
 -   `cluster` An optional string indicating a column from the dataframe
     `df` for which to perform a cluster bootstrap if desired.
-    `inference` must be set to `TRUE` or `"fixed"`. Defaulted to `NULL`.
+    `inference` must be set to `TRUE` or `"reestimate"`. Defaulted to
+    `NULL`.
 
 -   `alpha` Level of significance used for $RV_{\alpha}$ and the
     confidence intervals. Defaulted to `alpha = 0.05`.
@@ -218,7 +219,7 @@ by calling:
 ``` r
 sensewls_darfur$wls_data
 #> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02616902   0.03616962   0.13764840
+#>   0.08936507   0.02691257   0.03737610   0.14079150
 ```
 
 This estimation approach indicates that direct harm positively influence
@@ -235,7 +236,7 @@ standard error, and a confidence interval:
 ``` r
 sensewls_darfur$RV
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.05905906
+#>      0.02184304      0.13868612      0.06206206
 ```
 
 These sensitivity statistics include: (1) $R^2_w(Y\sim D|X)$, the
@@ -274,8 +275,8 @@ detail,
     for the WLS estimate to fail to be statistically distinguishable
     from zero at the $\alpha=0.05$ significance level (presuming the
     confounder influences the treatment and outcome equally). The
-    observed value of $RV_{\alpha=0.05} = 0.059$ posits that unobserved
-    confounders which account for 5.9% of the weighted residual variance
+    observed value of $RV_{\alpha=0.05} = 0.062$ posits that unobserved
+    confounders which account for 6.2% of the weighted residual variance
     have enough influence to render the estimate statistically
     insignificant.
 
@@ -297,10 +298,10 @@ with:
 ``` r
 sensewls_darfur$Covariate_Bound_Estimates
 #>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.015446243 0.11735805   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2  0.006482969 0.10894678   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3  0.006318434 0.10878215   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.005636442 0.09661741   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#> female.1  0.016916257 0.12011880   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2  0.008558302 0.11162325   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3  0.008394967 0.11145740   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4 -0.003496256 0.09940695   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
 ```
 
 Our analysis reports an initial estimate that is positive and
@@ -316,7 +317,7 @@ and the adjusted estimate would remain positive (+0.069) and
 statistically significant at the 0.05 level. However, a confounder that
 is two times as strong as `female` would render our estimate
 statistically insignificant at the $\alpha = 0.05$ threshold, as the
-adjusted 95% confidence interval (-0.006, 0.097) contains 0.
+adjusted 95% confidence interval (-0.003, 0.099) contains 0.
 
 One may also visualize the adjusted estimates from these estimated
 covariate bounds using the `plot_sensewls()` function:
@@ -343,22 +344,21 @@ new_output <- alter_sensewls(sensewls_darfur, alpha = 0.01, q = 0.9)
 ### Re-inspect results
 new_output$wls_data
 #> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02616902   0.02085808   0.15312774
+#>   0.08936507   0.02691257   0.01622206   0.15968279
 new_output$RVs
 #>        wR2.YD.X      RV_{q=0.9} RV_{alpha=0.01} 
-#>      0.02184304      0.12575125      0.03703704
+#>      0.02184304      0.12575125      0.02802803
 new_output$Covariate_Bound_Estimates
 #>                 Lower     Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.001348835 0.1322107   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2 -0.007408622 0.1235484   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3 -0.007583338 0.1233788   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.020277932 0.1110600   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#> female.1 -0.003649297 0.1386058   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2 -0.011945156 0.1298767   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3 -0.012106761 0.1297058   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4 -0.023848743 0.1172921   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
 ```
 
 Setting our Type I error rate to a higher standard of $\alpha = 0.01$,
-we find that our findings still, but just barely, support a
-statistically significant estimate when a confounder as strong as
-`female` is present.
+we find that our findings no longer support a statistically significant
+estimate when a confounder as strong as `female` is present.
 
 ### Custom Weight Functions
 
@@ -437,30 +437,30 @@ bootstrap.
 ### Check point estimates
 output_customewights$wls_data
 #> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02613541   0.03697425   0.13804491
+#>   0.08936507   0.02675131   0.03854453   0.14257452
 sensewls_darfur$wls_data
 #> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02616902   0.03616962   0.13764840
+#>   0.08936507   0.02691257   0.03737610   0.14079150
 
 ### Check robustness values
 output_customewights$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.06006006
+#>      0.02184304      0.13868612      0.06506507
 sensewls_darfur$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.05905906
+#>      0.02184304      0.13868612      0.06206206
 
 ### Check covariate bounds
 output_customewights$Covariate_Bound_Estimates
-#>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.016215482 0.11775399   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2  0.007626722 0.10934424   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3  0.007458912 0.10917963   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.004733950 0.09722787   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#>                 Lower     Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
+#> female.1  0.018501441 0.1220902   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2  0.010170444 0.1132511   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3  0.010007297 0.1130781   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4 -0.001843606 0.1005078   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
 sensewls_darfur$Covariate_Bound_Estimates
 #>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.015446243 0.11735805   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2  0.006482969 0.10894678   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3  0.006318434 0.10878215   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.005636442 0.09661741   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#> female.1  0.016916257 0.12011880   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2  0.008558302 0.11162325   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3  0.008394967 0.11145740   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4 -0.003496256 0.09940695   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
 ```

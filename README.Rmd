@@ -116,15 +116,15 @@ observed covariates, we need to supply `sensewls` the following arguments:
 To compute confidence intervals and $RV_{\alpha}$, `sensewls` takes the
 following six arguments:
 
--   `inference` Whether to obtain uncertainty estimates. If set to the logical `TRUE`,
-    a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
-    preset weights or an appropriate weighting function are chosen for `w`. If set to character
-    `"fixed"`, then a non-parametric bootstrap is performed that does NOT re-estimate the weights, and samples them
-    along with the data in each bootstrap sample. The percentile method is used for all bootstrap confidence intervals.
-    If set to the logical `FALSE`, then no uncertainty estimates are provided. Default is `FALSE`.
+-   `inference` Whether to obtain uncertainty estimates. If set to the logical
+    `TRUE`, then a non-parametric bootstrap is performed that fixes the weights, and samples them
+    along with the data in each bootstrap sample.
+    If set to the character `"reestimate"`, a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
+    preset weights or an appropriate weighting function are chosen for `w`. The percentile method is used for all bootstrap confidence intervals.
+    If set to the logical `FALSE`, then no uncertainty estimates are provided. Default is `TRUE`.
 
 -   `cluster` An optional string indicating a column from the dataframe `df` for which to perform a cluster bootstrap if desired.
-    `inference` must be set to `TRUE` or `"fixed"`. Defaulted to `NULL`.
+    `inference` must be set to `TRUE` or `"reestimate"`. Defaulted to `NULL`.
 
 -   `alpha` Level of significance used for $RV_{\alpha}$ and the
     confidence intervals. Defaulted to `alpha = 0.05`.
@@ -240,8 +240,8 @@ In detail,
     the WLS estimate to fail to be statistically distinguishable from
     zero at the $\alpha=0.05$ significance level (presuming the confounder
     influences the treatment and outcome equally). The observed value
-    of $RV_{\alpha=0.05} = 0.059$ posits that unobserved confounders which
-    account for 5.9% of the weighted residual variance have enough
+    of $RV_{\alpha=0.05} = 0.062$ posits that unobserved confounders which
+    account for 6.2% of the weighted residual variance have enough
     influence to render the estimate statistically
     insignificant.
 
@@ -269,7 +269,7 @@ the treatment as discussed in [Hazlett (2020)](https://journals.sagepub.com/doi/
 present, it would have strengths $R_w^2 (D \sim Z | X) = 0.011$ and $R_w^2 (Y \sim Z | X, D) = 0.108$, and the adjusted estimate would remain
 positive (+0.069) and statistically significant at the 0.05 level. However, a confounder that is
 two times as strong as `female` would render our estimate
-statistically insignificant at the $\alpha = 0.05$ threshold, as the adjusted 95\% confidence interval (-0.006, 0.097) contains 0. 
+statistically insignificant at the $\alpha = 0.05$ threshold, as the adjusted 95\% confidence interval (-0.003, 0.099) contains 0. 
 
 One may also visualize the adjusted estimates from these estimated covariate bounds using the `plot_sensewls()` function:
 ```{r}
@@ -295,7 +295,7 @@ new_output$Covariate_Bound_Estimates
 ```
 
 Setting our Type I error rate to a higher standard of $\alpha = 0.01$,
-we find that our findings still, but just barely, support a statistically
+we find that our findings no longer support a statistically
 significant estimate when a confounder as strong as `female` is
 present.
 

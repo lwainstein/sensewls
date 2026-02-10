@@ -16,7 +16,7 @@ sensewls(
   semiweights = NULL,
   normalize = FALSE,
   estimand = NULL,
-  inference = FALSE,
+  inference = TRUE,
   alpha = 0.05,
   cluster = NULL,
   B = 500,
@@ -64,15 +64,16 @@ Defaults to \code{NULL}. \code{semiweights} should be \code{NULL} unless \code{w
 \item{`alpha`}{Number between 0 and 1. Level of significance used for RV_alpha, and (1 - alpha)*100\% confidence intervals.
 Defaulted to alpha = 0.05 (and 95\% confidence intervals).}
 
-\item{`inference`}{Whether to obtain uncertainty estimates. If set to the logical \code{TRUE},
+\item{`inference`}{Whether to obtain uncertainty estimates. If set to the logical
+\verb{"TRUE}, then a non-parametric bootstrap is performed that fixes the weights, and samples them
+along with the data in each bootstrap sample. If set to the character \code{"reestimate"},
 a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
-a preset weighting function or an appropriate, user-supplied weighting function is chosen for \code{w}. If set to character
-\code{"fixed"}, then a non-parametric bootstrap is performed that does NOT re-estimate the weights, and samples them
-along with the data in each bootstrap sample. The percentile method is used for all bootstrap confidence intervals.
-If set to the logical \code{FALSE}, then no uncertainty estimates are provided. Default is \code{FALSE}.}
+a preset weighting function or an appropriate, user-supplied weighting function is chosen for \code{w}.
+The percentile method is used for all bootstrap confidence intervals.
+If set to the logical \code{FALSE}, then no uncertainty estimates are provided. Default is \code{TRUE}.}
 
 \item{`cluster`}{An optional string indicating a column from the data frame \code{df} for which to perform a cluster bootstrap if desired.
-\code{inference} must be set to \code{TRUE} or \code{"fixed"}. Defaulted to \code{NULL}.}
+\code{inference} must be set to \code{TRUE} or \code{"reestimate"}. Defaulted to \code{NULL}.}
 
 \item{`B`}{Number of bootstrap samples if used. Defaulted to 500.}
 

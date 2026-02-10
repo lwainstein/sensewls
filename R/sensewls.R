@@ -28,14 +28,15 @@
 #' @param `estimand` A string indicating the desired estimand. Only required if using preset weights. Can be `"ATT"`, `"ATC"`, or `"ATE"`. Default is `NULL`.
 #' @param `alpha` Number between 0 and 1. Level of significance used for RV_alpha, and (1 - alpha)*100% confidence intervals.
 #' Defaulted to alpha = 0.05 (and 95% confidence intervals).
-#' @param `inference` Whether to obtain uncertainty estimates. If set to the logical `TRUE`,
+#' @param `inference` Whether to obtain uncertainty estimates. If set to the logical
+#' `"TRUE`, then a non-parametric bootstrap is performed that fixes the weights, and samples them
+#' along with the data in each bootstrap sample. If set to the character `"reestimate"`,
 #' a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
-#' a preset weighting function or an appropriate, user-supplied weighting function is chosen for `w`. If set to character
-#' `"fixed"`, then a non-parametric bootstrap is performed that does NOT re-estimate the weights, and samples them
-#' along with the data in each bootstrap sample. The percentile method is used for all bootstrap confidence intervals.
-#' If set to the logical `FALSE`, then no uncertainty estimates are provided. Default is `FALSE`.
+#' a preset weighting function or an appropriate, user-supplied weighting function is chosen for `w`.
+#' The percentile method is used for all bootstrap confidence intervals.
+#' If set to the logical `FALSE`, then no uncertainty estimates are provided. Default is `TRUE`.
 #' @param `cluster` An optional string indicating a column from the data frame `df` for which to perform a cluster bootstrap if desired.
-#' `inference` must be set to `TRUE` or `"fixed"`. Defaulted to `NULL`.
+#' `inference` must be set to `TRUE` or `"reestimate"`. Defaulted to `NULL`.
 #' @param `B` Number of bootstrap samples if used. Defaulted to 500.
 #' @param `par` Boolean for whether bootstrapping should be parallelized through
 #' the `parallel` library. Defaulted to `FALSE`.
@@ -75,7 +76,7 @@
 #'    kd = 1:3,
 #'    w = "matchit",
 #'    estimand = "ATE",
-#'    inference = T,
+#'    inference = TRUE,
 #'    cluster = "village",
 #'    par = T,
 #'    ncpus = 7,
@@ -94,7 +95,7 @@
 sensewls <- function(df, treatment, outcome, covars,
                 bounding_covars, kd = 1, ky = kd,
                 w, semiweights = NULL, normalize = FALSE, estimand = NULL,
-                inference=FALSE, alpha = 0.05, cluster = NULL,
+                inference=TRUE, alpha = 0.05, cluster = NULL,
                 B = 500, par = F, ncpus = NULL,
                 ...)
   {
@@ -226,19 +227,19 @@ sensewls <- function(df, treatment, outcome, covars,
   # inference
   if(
     !(is.logical(inference) | is.character(inference))
-  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'fixed'`.\n")}
+  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'reestimate'`.\n")}
   if(
     is.logical(inference) & length(inference)>1
-  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'fixed'`.\n")}
+  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'reestimate'`.\n")}
   if(
     is.character(inference) & length(inference)>1
-  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'fixed'`.\n")}
-  if(is.numeric(w) & inference==TRUE){
-    stop("Bootstrap cannot re-estimate weights if they are specified with `w`. `inference` must be set to `FALSE` or `'fixed'`.\n")
+  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'reestimate'`.\n")}
+  if(is.numeric(w) & inference=="reestimate"){
+    stop("Bootstrap cannot re-estimate weights if they are specified with `w`. `inference` must be set to `TRUE` or `FALSE`.\n")
   }
 
   # cluster
-  if( !is.null(cluster) & (inference==TRUE | inference=="fixed") ){ # only check cluster if it's not NULL
+  if( !is.null(cluster) & (inference==TRUE | inference=="reestimate") ){ # only check cluster if it's not NULL
     if(
       !is.character(cluster)
     ){stop("`cluster` must be a single character string.\n")}
@@ -251,7 +252,7 @@ sensewls <- function(df, treatment, outcome, covars,
   }
 
   # B, par, and cpus
-  if(inference==TRUE | inference=="fixed"){
+  if(inference==TRUE | inference=="reestimate"){
     if(
       !is.numeric(B)
     ){stop("`B` must be a single number.\n")}
@@ -264,7 +265,7 @@ sensewls <- function(df, treatment, outcome, covars,
   }
 
   # par
-  if(inference==TRUE | inference=="fixed"){
+  if(inference==TRUE | inference=="reestimate"){
     if(
       !is.logical(par)
     ){stop("`par` must be a single logical.\n")}
@@ -274,7 +275,7 @@ sensewls <- function(df, treatment, outcome, covars,
   }
 
   # ncpus
-  if( (inference==TRUE | inference=="fixed") & par==TRUE ){
+  if( (inference==TRUE | inference=="reestimate") & par==TRUE ){
     if(
       !is.numeric(ncpus)
     ){stop("`ncpus` must be a single number.\n")}
@@ -315,10 +316,10 @@ sensewls <- function(df, treatment, outcome, covars,
   ##### SET-UP
   ### Define a string for the CI_method
   if(inference==TRUE){
-    CI_method <- "reestimate_weights"
-  }
-  if(inference=="fixed"){
     CI_method <- "fixed_weights"
+  }
+  if(inference=="reestimate"){
+    CI_method <- "reestimate_weights"
   }
   if(inference==FALSE){
     CI_method <- "none"
