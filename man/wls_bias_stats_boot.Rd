@@ -24,19 +24,19 @@ wls_bias_stats_boot(
 \item{strata}{String denoting stratifying variable for cluster bootstrap
 defaulted to \code{NULL} which yields nonparametric resampling for bootstrap}
 
-\item{`par`}{Boolean for whether bootstrapping should be parallelized through
+\item{par}{Boolean for whether bootstrapping should be parallelized through
 the \code{parallel} library. Defaulted to \code{FALSE}.}
 
-\item{`ncpus`}{Number of cpus used if \code{par} is set to \code{TRUE}. Defaulted to \code{NULL} and
+\item{ncpus}{Number of cpus used if \code{par} is set to \code{TRUE}. Defaulted to \code{NULL} and
 must be supplied if \code{par} is set to true.}
 
-\item{`treatment`}{A string indicating the column name of the treatment variable.}
+\item{treatment}{A string indicating the column name of the treatment variable.}
 
-\item{`outcome`}{A string indicating the column name of the outcome variable.}
+\item{outcome}{A string indicating the column name of the outcome variable.}
 
-\item{`covars`}{A character vector of column names of the relevant covariates in the dataframe.}
+\item{df}{A dataframe containing \code{treatment}, \code{outcome}, and \code{covars}.}
 
-\item{`df`}{A dataframe containing \code{treatment}, \code{outcome}, and \code{covars}.}
+\item{covars}{A character vector of column names of the relevant covariates in the dataframe.}
 }
 \value{
 A Bx2 matrix with each row corresponding to the

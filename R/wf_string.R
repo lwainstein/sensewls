@@ -4,7 +4,7 @@
 #'
 #'
 #' @param w String for one of the preset weighting functions.
-#' @param `estimand` A string indicating the desired estimand. Only required if using preset weights. Can be `"ATT"`, `"ATC"`, or `"ATE"`. Default is `NULL`.
+#' @param estimand A string indicating the desired estimand. Only required if using preset weights. Can be `"ATT"`, `"ATC"`, or `"ATE"`. Default is `NULL`.
 #' @param ... Additional arguments passed to preset weighting functions.
 #' Currently supports providing `caliper` and `ratio` to the [MatchIt::matchit()] weighting function
 #' used by setting `w = 'matchit'`.

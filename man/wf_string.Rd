@@ -9,11 +9,11 @@ wf_string(w, estimand, ...)
 \arguments{
 \item{w}{String for one of the preset weighting functions.}
 
+\item{estimand}{A string indicating the desired estimand. Only required if using preset weights. Can be \code{"ATT"}, \code{"ATC"}, or \code{"ATE"}. Default is \code{NULL}.}
+
 \item{...}{Additional arguments passed to preset weighting functions.
 Currently supports providing \code{caliper} and \code{ratio} to the \code{\link[MatchIt:matchit]{MatchIt::matchit()}} weighting function
 used by setting \code{w = 'matchit'}.}
-
-\item{`estimand`}{A string indicating the desired estimand. Only required if using preset weights. Can be \code{"ATT"}, \code{"ATC"}, or \code{"ATE"}. Default is \code{NULL}.}
 }
 \value{
 Appropriate preset weight function.

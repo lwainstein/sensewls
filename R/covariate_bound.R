@@ -20,7 +20,7 @@ partial_DXsub.Xrem <- function(d,y,X,Xrem, wv){
 #' @param bounding_cov Character vector of bounding covariates
 #' @param w2 semiweights vector for associated bounding covariate. Should sum to n.
 #' @param treatment Character vector indicating treatment column in `df`
-#' @param `outcome` A string indicating the column name of the outcome variable in `df`
+#' @param outcome A string indicating the column name of the outcome variable in `df`
 #' @param w weights vector (already calculated). Should sum to n.
 #' @param kd treatment strength ratio
 #' @param ky outcome strength ratio

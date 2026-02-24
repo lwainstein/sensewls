@@ -9,13 +9,13 @@ w_normalize(w, treatment, df)
 \arguments{
 \item{w}{A weights vector.}
 
-\item{`df`}{A dataframe containing \code{treatment}.}
+\item{treatment}{A string indicating the columnname of the treatment variable.}
 
-\item{`treatment`}{A string indicating the columnname of the treatment variable.}
+\item{df}{A dataframe containing \code{treatment}.}
 }
 \value{
 Normalized weight vector
 }
 \description{
-Normalize vector of weights per Wainstein and Hazlett (2025).
+Normalize vector of weights per \href{https://www.arxiv.org/abs/2508.02954}{Wainstein and Hazlett (2025)}.
 }

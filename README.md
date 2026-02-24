@@ -437,7 +437,7 @@ bootstrap.
 ### Check point estimates
 output_customewights$wls_data
 #> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02675131   0.03854453   0.14257452
+#>   0.08936507   0.02627349   0.03812035   0.14175264
 sensewls_darfur$wls_data
 #> WLS_estimate       Est_SE        Lower        Upper 
 #>   0.08936507   0.02691257   0.03737610   0.14079150
@@ -445,18 +445,18 @@ sensewls_darfur$wls_data
 ### Check robustness values
 output_customewights$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.06506507
+#>      0.02184304      0.13868612      0.06406406
 sensewls_darfur$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
 #>      0.02184304      0.13868612      0.06206206
 
 ### Check covariate bounds
 output_customewights$Covariate_Bound_Estimates
-#>                 Lower     Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.018501441 0.1220902   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2  0.010170444 0.1132511   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3  0.010007297 0.1130781   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.001843606 0.1005078   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
+#> female.1  0.018186554 0.11999200   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2  0.009931398 0.11098030   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3  0.009769824 0.11080392   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4 -0.001969924 0.09826256   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
 sensewls_darfur$Covariate_Bound_Estimates
 #>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
 #> female.1  0.016916257 0.12011880   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
@@ -464,3 +464,21 @@ sensewls_darfur$Covariate_Bound_Estimates
 #> female.3  0.008394967 0.11145740   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
 #> female.4 -0.003496256 0.09940695   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
 ```
+
+## References
+
+Cinelli, C. and Hazlett, C. (2020). Making sense of sensitivity:
+Extending omitted variable bias. *Journal of the Royal Statistical
+Society: Series B (Statistical Methodology), 82*(1):39–67.
+
+Hazlett, C. (2020). Angry or weary? How violence impacts attitudes
+toward peace among Darfurian refugees. *Journal of Conflict Resolution,
+64*(5):844–870.
+
+Ho, D. E., Imai, K., King, G., and Stuart, E. A. (2007). Matching as
+nonparametric preprocessing for reducing model dependence in parametric
+causal inference. *Political Analysis, 15*(3):199–236.
+
+Wainstein, L. & Hazlett, C. (2025). Sensitivity of weighted least
+squares estimators to omitted variables. *arXiv preprint
+arXiv:2508.02954*.

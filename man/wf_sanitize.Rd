@@ -11,14 +11,14 @@ wf_sanitize(w, estimand = NULL, normalize, ...)
 (1) an appropriate weighting function, or
 (2) a string for one of the preset weighting functions.}
 
+\item{estimand}{A string indicating the desired estimand. Only required if using preset weights. Can be \code{"ATT"}, \code{"ATC"}, or \code{"ATE"}. Default is \code{NULL}.}
+
+\item{normalize}{A single logical, whether or not to normalize the weights when a custom weight function is provided for \code{w}.
+Weights are normalized for all the preset weighting functions.}
+
 \item{...}{Additional arguments passed to preset weighting functions.
 Currently supports providing \code{caliper} and \code{ratio} to the \code{\link[MatchIt:matchit]{MatchIt::matchit()}} weighting function
 used by setting \code{w = 'matchit'}.}
-
-\item{`estimand`}{A string indicating the desired estimand. Only required if using preset weights. Can be \code{"ATT"}, \code{"ATC"}, or \code{"ATE"}. Default is \code{NULL}.}
-
-\item{`normalize`}{A single logical, whether or not to normalize the weights when a custom weight function is provided for \code{w}.
-Weights are normalized for all the preset weighting functions.}
 }
 \value{
 Appropriate weight function that (if desired) normalizes weights.

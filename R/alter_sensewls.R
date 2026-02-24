@@ -4,9 +4,9 @@
 #' significance levels (`alpha`) and `q` threshold for robustness values and confidence intervals of
 #' a `sensewls` object.
 #'
-#' @param `sensewls_obj` A `sensewls` object, the output from the `sensewls()` function.
-#' @param `alpha` Updated level of significance used for RV_alpha, and (1 - alpha)*100% confidence intervals.
-#' @param `q` Updated `q` threshold for RV_q.
+#' @param sensewls_obj A `sensewls` object, the output from the `sensewls()` function.
+#' @param alpha Updated level of significance used for RV_alpha, and (1 - alpha)*100% confidence intervals.
+#' @param q Updated `q` threshold for RV_q.
 #'
 #'
 #' @returns

@@ -7,11 +7,11 @@
 alter_sensewls(sensewls_obj, alpha, q)
 }
 \arguments{
-\item{`sensewls_obj`}{A \code{sensewls} object, the output from the \code{sensewls()} function.}
+\item{sensewls_obj}{A \code{sensewls} object, the output from the \code{sensewls()} function.}
 
-\item{`alpha`}{Updated level of significance used for RV_alpha, and (1 - alpha)*100\% confidence intervals.}
+\item{alpha}{Updated level of significance used for RV_alpha, and (1 - alpha)*100\% confidence intervals.}
 
-\item{`q`}{Updated \code{q} threshold for RV_q.}
+\item{q}{Updated \code{q} threshold for RV_q.}
 }
 \value{
 A sensewls object containing a variety of sensitivity statistics, with updated significance levels, confidence intervals, and

@@ -12,8 +12,8 @@ ESS <- function(w){
 #' @param w A weights object, containing either
 #' (1) an appropriate weighting function, or
 #' (2) a string for one of the preset weighting functions.
-#' @param `estimand` A string indicating the desired estimand. Only required if using preset weights. Can be `"ATT"`, `"ATC"`, or `"ATE"`. Default is `NULL`.
-#' @param `normalize` A single logical, whether or not to normalize the weights when a custom weight function is provided for `w`.
+#' @param estimand A string indicating the desired estimand. Only required if using preset weights. Can be `"ATT"`, `"ATC"`, or `"ATE"`. Default is `NULL`.
+#' @param normalize A single logical, whether or not to normalize the weights when a custom weight function is provided for `w`.
 #' Weights are normalized for all the preset weighting functions.
 #' @param ... Additional arguments passed to preset weighting functions.
 #' Currently supports providing `caliper` and `ratio` to the [MatchIt::matchit()] weighting function

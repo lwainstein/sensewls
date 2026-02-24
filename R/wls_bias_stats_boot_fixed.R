@@ -10,14 +10,14 @@
 #' @param B Number of bootstrap samples
 #' @param strata String denoting stratifying variable for cluster bootstrap
 #' defaulted to `NULL` which yields nonparametric resampling for bootstrap
-#' @param `par` Boolean for whether bootstrapping should be parallelized through
+#' @param par Boolean for whether bootstrapping should be parallelized through
 #' the `parallel` library. Defaulted to `FALSE`.
-#' @param `ncpus` Number of cpus used if `par` is set to `TRUE`. Defaulted to `NULL` and
+#' @param ncpus Number of cpus used if `par` is set to `TRUE`. Defaulted to `NULL` and
 #' must be supplied if `par` is set to true.
-#' @param `treatment` A string indicating the column name of the treatment variable.
-#' @param `outcome` A string indicating the column name of the outcome variable.
-#' @param `covars` A character vector of column names of the relevant covariates in the dataframe.
-#' @param `df` A dataframe containing `treatment`, `outcome`, and `covars`.
+#' @param treatment A string indicating the column name of the treatment variable.
+#' @param outcome A string indicating the column name of the outcome variable.
+#' @param covars A character vector of column names of the relevant covariates in the dataframe.
+#' @param df A dataframe containing `treatment`, `outcome`, and `covars`.
 #'
 #'
 #' @import parallel

@@ -13,6 +13,8 @@ covariate_bound(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
 
 \item{treatment}{Character vector indicating treatment column in \code{df}}
 
+\item{outcome}{A string indicating the column name of the outcome variable in \code{df}}
+
 \item{w}{weights vector (already calculated). Should sum to n.}
 
 \item{kd}{treatment strength ratio}
@@ -20,8 +22,6 @@ covariate_bound(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
 \item{ky}{outcome strength ratio}
 
 \item{df}{Source Dataframe -- prefiltered to contain only relevant covariates}
-
-\item{`outcome`}{A string indicating the column name of the outcome variable in \code{df}}
 }
 \value{
 Data frame of covariate bounds

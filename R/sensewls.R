@@ -2,45 +2,45 @@
 #' Sensitivity analysis to omitted confounders for weighted least squares estimators of treatment effects
 #'
 #' @description This function performs the weighted sensitivity analysis for a weighted least squares
-#'  estimator as described in Wainstein and Hazlett (https://www.arxiv.org/abs/2508.02954). It returns an object of class `sensewls`
+#'  estimator as described in [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954). It returns an object of class `sensewls`
 #'  containing a variety of sensitivity statistics. An output object can use the `plot_sensewls()`
 #'  function for visualization.
 #'
-#' @param `df` A dataframe containing `treatment`, `outcome`, and `covars`.
-#' @param `treatment` A string indicating the column name of the treatment variable.
-#' @param `outcome` A string indicating the column name of the outcome variable.
-#' @param `covars` A character vector of column names of the relevant covariates in the dataframe.
-#' @param `bounding_covars` A list of character vectors containing covariates to benchmark by. May be a character vector if only one set of bounding covariates is desired.
-#' @param `kd` A numeric vector of considered covariate bound strengths for association with the treatment variable. Default value is `1`.
-#' @param `ky` A numeric vector of considered covariate bound strengths for association with the outcome variable. Default value is `kd`.
-#' @param `w` A weights object, containing either
+#' @param df A dataframe containing `treatment`, `outcome`, and `covars`.
+#' @param treatment A string indicating the column name of the treatment variable.
+#' @param outcome A string indicating the column name of the outcome variable.
+#' @param covars A character vector of column names of the relevant covariates in the dataframe.
+#' @param bounding_covars A list of character vectors containing covariates to benchmark by. May be a character vector if only one set of bounding covariates is desired.
+#' @param kd A numeric vector of considered covariate bound strengths for association with the treatment variable. Default value is `1`.
+#' @param ky A numeric vector of considered covariate bound strengths for association with the outcome variable. Default value is `kd`.
+#' @param w A weights object, containing either
 #' (1) a numeric vector of weights
 #' (2) an appropriate weighting function, or
 #' (3) a string for one of the preset weighting functions.
 #' Three presets are currently available, `prop_score` (inverse propensity score weights, with a logistic regression for the treatment variable), `matchit` (through the `MatchIt` package: https://cran.r-project.org/web/packages/MatchIt/index.html)
 #' and `ebal` (through the `ebal` package: https://cran.r-project.org/web/packages/ebal/index.html).
-#' @param `normalize` A single logical, indicating whether or not to normalize the weights (and `semiweights`) when either (1) a numeric vector of weights, or (2) a custom weight function is provided for `w`.
+#' @param normalize A single logical, indicating whether or not to normalize the weights (and `semiweights`) when either (1) a numeric vector of weights, or (2) a custom weight function is provided for `w`.
 #' Default is `FALSE`. But weights are normalized for all the preset weighting functions.
-#' @param `semiweights` List of semiweights, with the ith entry corresponding
+#' @param semiweights List of semiweights, with the ith entry corresponding
 #' to the semiweights formed when constructing weights while omitting the
 #' ith set of covariates in the `bounding_covars` list. May be one numeric vector of semiweights if `bounding_covars` is only one character vector of bounding covariates.
 #' Defaults to `NULL`. `semiweights` should be `NULL` unless `w` is a numeric vector of specified weights.
-#' @param `estimand` A string indicating the desired estimand. Only required if using preset weights. Can be `"ATT"`, `"ATC"`, or `"ATE"`. Default is `NULL`.
-#' @param `alpha` Number between 0 and 1. Level of significance used for RV_alpha, and (1 - alpha)*100% confidence intervals.
+#' @param estimand A string indicating the desired estimand. Only required if using preset weights. Can be `"ATT"`, `"ATC"`, or `"ATE"`. Default is `NULL`.
+#' @param alpha Number between 0 and 1. Level of significance used for RV_alpha, and (1 - alpha)*100% confidence intervals.
 #' Defaulted to alpha = 0.05 (and 95% confidence intervals).
-#' @param `inference` Whether to obtain uncertainty estimates. If set to the logical
+#' @param inference Whether to obtain uncertainty estimates. If set to the logical
 #' `"TRUE`, then a non-parametric bootstrap is performed that fixes the weights, and samples them
 #' along with the data in each bootstrap sample. If set to the character `"reestimate"`,
 #' a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
 #' a preset weighting function or an appropriate, user-supplied weighting function is chosen for `w`.
 #' The percentile method is used for all bootstrap confidence intervals.
 #' If set to the logical `FALSE`, then no uncertainty estimates are provided. Default is `TRUE`.
-#' @param `cluster` An optional string indicating a column from the data frame `df` for which to perform a cluster bootstrap if desired.
+#' @param cluster An optional string indicating a column from the data frame `df` for which to perform a cluster bootstrap if desired.
 #' `inference` must be set to `TRUE` or `"reestimate"`. Defaulted to `NULL`.
-#' @param `B` Number of bootstrap samples if used. Defaulted to 500.
-#' @param `par` Boolean for whether bootstrapping should be parallelized through
+#' @param B Number of bootstrap samples if used. Defaulted to 500.
+#' @param par Boolean for whether bootstrapping should be parallelized through
 #' the `parallel` library. Defaulted to `FALSE`.
-#' @param `ncpus` Number of cpus used if `par` is set to `TRUE`. Defaulted to `NULL` and
+#' @param ncpus Number of cpus used if `par` is set to `TRUE`. Defaulted to `NULL` and
 #' must be supplied if `par` is set to true.
 #' @param ... Additional arguments passed to preset weighting functions.
 #' Currently supports providing `caliper` and `ratio` to the [MatchIt::matchit()] weighting function

@@ -7,12 +7,12 @@ ESS <- function(w){
 
 #' Normalize vector of weights per Wainstein and Hazlett (2025).
 #'
-#' @description Normalize vector of weights per Wainstein and Hazlett (2025).
+#' @description Normalize vector of weights per [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954).
 #'
 #'
 #' @param w A weights vector.
-#' @param `df` A dataframe containing `treatment`.
-#' @param `treatment` A string indicating the columnname of the treatment variable.
+#' @param df A dataframe containing `treatment`.
+#' @param treatment A string indicating the columnname of the treatment variable.
 #'
 
 #'

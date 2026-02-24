@@ -379,3 +379,17 @@ sensewls_darfur$Covariate_Bound_Estimates
 ```
 
 
+
+
+## References
+
+Cinelli, C. and Hazlett, C. (2020). Making sense of sensitivity: Extending omitted variable bias. *Journal of the Royal Statistical Society: Series B (Statistical Methodology), 82*(1):39–67.
+
+Hazlett, C. (2020). Angry or weary? How violence impacts attitudes toward peace among Darfurian refugees. *Journal of Conflict Resolution, 64*(5):844–870.
+
+Ho, D. E., Imai, K., King, G., and Stuart, E. A. (2007). Matching as nonparametric preprocessing for reducing model dependence in parametric causal inference. *Political Analysis, 15*(3):199–236.
+
+Wainstein, L. & Hazlett, C. (2025). Sensitivity of weighted least squares estimators to omitted variables. *arXiv preprint arXiv:2508.02954*.
+
+
+
