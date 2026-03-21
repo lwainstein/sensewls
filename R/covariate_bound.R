@@ -50,6 +50,7 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
   wvar.DperpXrem <- mean(w* wDperpXrem^2)
 
   wR2.DXsub.Xrem <- (wvar.DperpXrem - wvar.DperpX) / wvar.DperpXrem
+  if(wR2.DXsub.Xrem<0) wR2.DXsub.Xrem <- 0
 
   w2DperpX <- lm(as.formula(paste(treatment, '~ . -', outcome)),
                  data = X, weights = w2)$residuals
@@ -60,7 +61,7 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
   w2var.DperpXrem <- mean(w2 * w2DperpXrem^2)
 
   w2R2.DXsub.Xrem <- (w2var.DperpXrem - w2var.DperpX) / w2var.DperpXrem
-
+  if(w2R2.DXsub.Xrem<0) w2R2.DXsub.Xrem <- 0
 
   ### Outcome Bounds
   ## R_{wv}^2(Y~Xsub|D,X)
@@ -79,19 +80,37 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
   strengths <- NULL
   for(k1 in kd){
   for(k2 in ky){
-    wR2.ZXsub.XremD <-  k1 * w2R2.DXsub.Xrem / (1 - k1 * w2R2.DXsub.Xrem) *
-                        wR2.DXsub.Xrem / (1 - wR2.DXsub.Xrem)
 
-    eta <- ( sqrt(k2) + sqrt(wR2.ZXsub.XremD) ) / sqrt(1-wR2.ZXsub.XremD)
-
+    # Calculate D-bound
     temp.d <- k1 * w2R2.DXsub.Xrem / (1 - wR2.DXsub.Xrem)
+    if(temp.d>1){
+      warning_message <- paste0("Bound on wR2.DZ.X is >1 when kd=", k1, " and benchmarking with (", paste(bounding_cov, collapse=", "), "). Setting wR2.DZ.X=1, and adjusted estimate will be NA.")
+      warning(warning_message)
+    }
     temp.d <- ifelse(temp.d > 1, 1, temp.d)
     bound.d <- c(bound.d, temp.d)
 
-    temp.y <- eta^2 * wR2.YXsub.XremD / (1 - wR2.YXsub.XremD)
-    temp.y <- ifelse(temp.y > 1, 1, temp.y)
+    # Calculate Y-bound
+    if(k1 * w2R2.DXsub.Xrem < 1){
+      wR2.ZXsub.XremD <-  k1 * w2R2.DXsub.Xrem / (1 - k1 * w2R2.DXsub.Xrem) *
+                          wR2.DXsub.Xrem / (1 - wR2.DXsub.Xrem)
+
+      eta <- ( sqrt(k2) + sqrt(wR2.ZXsub.XremD) ) / sqrt(1-wR2.ZXsub.XremD)
+      temp.y <- eta^2 * wR2.YXsub.XremD / (1 - wR2.YXsub.XremD)
+      if(temp.y>1){
+        warning_message <- paste0("Bound on wR2.YZ.DX is >1 when ky=", k2, " and benchmarking with (", paste(bounding_cov, collapse=", "), "). Setting wR2.YZ.DX=1.")
+        warning(warning_message)
+      }
+      temp.y <- ifelse(temp.y > 1, 1, temp.y)
+    }
+    if(k1 * w2R2.DXsub.Xrem >= 1){
+      warning_message <- paste0("kd=", k1, " is too high when benchmarking with (", paste(bounding_cov, collapse=", "), ") to find wR2.YZ.DX. Setting wR2.YZ.DX=NA, and adjusted estimate will be NA.")
+      warning(warning_message)
+      temp.y <- NA
+    }
     bound.y <- c(bound.y, temp.y)
 
+    # Add to vector of strength strings
     strengths <- c(strengths, paste("kd=", k1, ", ", "ky=", k2, sep=""))
   }
   }

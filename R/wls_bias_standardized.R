@@ -16,11 +16,13 @@
 
 
 wls_bias_standardized <- function(r2wyz, r2wdz){
+  temp <- sqrt(r2wyz) * sqrt(r2wdz) / sqrt(1 - r2wdz)
 
-  return(
-      sqrt(r2wyz) * sqrt(r2wdz) / sqrt(1 - r2wdz)
-  )
+  temp[is.nan(temp)] <- NA
+  temp[is.na(temp)] <- NA
+  temp[is.infinite(temp)] <- NA
 
+  return(temp)
 }
 
 

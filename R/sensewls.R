@@ -10,7 +10,7 @@
 #' @param treatment A string indicating the column name of the treatment variable.
 #' @param outcome A string indicating the column name of the outcome variable.
 #' @param covars A character vector of column names of the relevant covariates in the dataframe.
-#' @param bounding_covars A list of character vectors containing covariates to benchmark by. May be a character vector if only one set of bounding covariates is desired.
+#' @param bounding_covars A list of character vectors containing covariates to benchmark by. May be a character vector if only one set of bounding covariates is desired -- note in this case that `sensewls()` will benchmark on all of the covariates in the provided vector *combined*, and *not* separately.
 #' @param kd A numeric vector of considered covariate bound strengths for association with the treatment variable. Default value is `1`.
 #' @param ky A numeric vector of considered covariate bound strengths for association with the outcome variable. Default value is `kd`.
 #' @param w A weights object, containing either
@@ -147,13 +147,6 @@ sensewls <- function(df, treatment, outcome, covars,
   if(
     !(is.character(bounding_covars) | is.list(bounding_covars))
   ){stop("`bounding_covars` must be a character vector, or a list of character vectors.\n")}
-  if(is.character(bounding_covars)){
-    user_list_bounding_covars <- F
-    if(
-      sum(!(bounding_covars %in% covars))>0
-    ){stop("`bounding_covars` must be contained in `covars`.\n")}
-    bounding_covars <-list(bounding_covars)
-  }
   if(is.list(bounding_covars)){
     user_list_bounding_covars <- T
     for(listnum in 1:length(bounding_covars)){
@@ -162,6 +155,13 @@ sensewls <- function(df, treatment, outcome, covars,
         sum(!(bounding_covars[[listnum]] %in% covars))>0
       ){stop("`bounding_covars` must be contained in `covars`.\n")}
     }
+  }
+  if(is.character(bounding_covars)){
+    user_list_bounding_covars <- F
+    if(
+      sum(!(bounding_covars %in% covars))>0
+    ){stop("`bounding_covars` must be contained in `covars`.\n")}
+    bounding_covars <-list(bounding_covars)
   }
 
   # kd
@@ -290,7 +290,10 @@ sensewls <- function(df, treatment, outcome, covars,
   # semiweights
   if(is.numeric(w)){
     if(user_list_bounding_covars==F){
-      if(!is.numeric(semiweights)) stop("`semiweights` must be a numeric vector.\n")
+      if(is.list(semiweights)){
+        if(length(bounding_covars[[1]])==length(semiweights))  stop("`semiweights` must be a numeric vector if `bounding_covars` is input as a character vector.\nNumber of covariates in `bounding_covars` vector is the same as the number of weight vectors in the `semiweights` list. If you meant to benchmark on each variable in `bounding_covars` individually, then `bounding_covars` should be input as a list, with each variable being its own element in the list.\n")
+      }
+      if(!is.numeric(semiweights)) stop("`semiweights` must be a numeric vector if `bounding_covars` is input as a character vector.\n")
       if(length(w)!=length(semiweights)) stop("`semiweights` must be the same length as the data.\n")
       if(sum(semiweights<0)>0) stop("`semiweights` must be a vector of positive weights.\n")
       semiweights <- list(semiweights)
@@ -304,6 +307,9 @@ sensewls <- function(df, treatment, outcome, covars,
         if(sum(semiweights[[listnum]]<0)>0) stop("Weight vectors in `semiweights` must be non-negative.\n")
       }
     }
+  }
+  if(user_list_bounding_covars==F){
+    warning("`bounding_covars` input as a charactor vector. Note that benchmarking will be done using the *combined* strength of the variables in the `bounding_covars` vector, and *not* each variable individually. To benchmark on each variable individually, `bounding_covars` should be input as a list, with each variable being its own element in the list.\n")
   }
   if(!is.numeric(w)){
     if(!is.null(semiweights)) stop("`semiweights` should be `NULL` if `w` is not a vector of prespecified weights.\n")
@@ -483,7 +489,7 @@ sensewls <- function(df, treatment, outcome, covars,
                 wls_sign * (abs(r[1]) - wls_bias_standardized(cov_bound_partials[,'bound.y'],
                                      cov_bound_partials[,'bound.d']) * r[2])
               }) %>%
-            apply(1, quantile, probs = c(alpha / 2, 1 - alpha / 2)) %>%
+            apply(1, quantile, probs = c(alpha / 2, 1 - alpha / 2), na.rm=TRUE) %>%
             t()
         return(temp)
       }
@@ -496,7 +502,7 @@ sensewls <- function(df, treatment, outcome, covars,
                                                         cov_bound_partials[,'bound.d']) * r[2])
                 }) %>%
           as.numeric()
-        temp <- quantile(temp, probs = c(alpha / 2, 1 - alpha / 2))
+        temp <- quantile(temp, probs = c(alpha / 2, 1 - alpha / 2), na.rm=TRUE)
         temp <- t(as.matrix(temp))
         return(temp)
       }
@@ -591,7 +597,7 @@ sensewls <- function(df, treatment, outcome, covars,
                     wls_sign * (abs(r[1]) - wls_bias_standardized(grid_strengths,
                                          grid_strengths) * r[2])
                   }) %>%
-            apply(1, quantile, probs = c(alpha / 2, 1 - alpha / 2)) %>%
+            apply(1, quantile, probs = c(alpha / 2, 1 - alpha / 2), na.rm=TRUE) %>%
             t()
 
           contains_zero <- apply(CI_grid, 1, function(r){r[1] < 0 & r[2] > 0})

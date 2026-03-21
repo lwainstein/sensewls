@@ -34,7 +34,7 @@ sensewls(
 
 \item{covars}{A character vector of column names of the relevant covariates in the dataframe.}
 
-\item{bounding_covars}{A list of character vectors containing covariates to benchmark by. May be a character vector if only one set of bounding covariates is desired.}
+\item{bounding_covars}{A list of character vectors containing covariates to benchmark by. May be a character vector if only one set of bounding covariates is desired -- note in this case that \code{sensewls()} will benchmark on all of the covariates in the provided vector \emph{combined}, and \emph{not} separately.}
 
 \item{kd}{A numeric vector of considered covariate bound strengths for association with the treatment variable. Default value is \code{1}.}
 
