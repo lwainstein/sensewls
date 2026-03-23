@@ -6,22 +6,26 @@
 \usage{
 plot_sensewls(
   sensewls_obj,
-  contour_levels = NULL,
   xlim = c(0, 1),
   ylim = c(0, 1),
+  sig_contour = FALSE,
+  sig_alpha = NULL,
   palette = 7
 )
 }
 \arguments{
 \item{sensewls_obj}{An object of class \code{sensewls}, constructed from the \code{sensewls} function}
 
-\item{contour_levels}{A vector containing values of adjusted estimates to plot the level sets of}
-
 \item{xlim}{A vector providing the lower and upper bounds of the x-axis.
 Must be a subinterval of the unit interval}
 
 \item{ylim}{A vector providing the lower and upper bounds of the y-axis.
 Must be a subinterval of the unit interval.}
+
+\item{sig_contour}{A single logical, indicating whether or not to plot the contour line for the \emph{first}
+adjusted estimate that is statistically insignificant (at the \code{sig_alpha} level). Default value is \code{FALSE}.}
+
+\item{sig_alpha}{Number between 0 and 1. Updated level of significance for the \code{sig_countour} line. If \code{NULL}, then assumes the significance level from provided \code{sensewls_obj}. Default value is \code{NULL}.}
 
 \item{palette}{An argument which is supplied to \code{scale_color_brewer} to
 color the scatterplot with a seqential palette.}

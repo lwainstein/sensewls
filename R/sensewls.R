@@ -179,7 +179,7 @@ sensewls <- function(df, treatment, outcome, covars,
   if(
     is.numeric(alpha) & length(alpha)>1
   ){stop("`alpha` must be a single number.\n")}
-  if(alpha<0 | alpha >1){stop("`alpha` must be a number between 0 and 1.\n")}
+  if(alpha<=0 | alpha >=1){stop("`alpha` must be a number between 0 and 1.\n")}
 
   # weights
   if(!is.numeric(w) & !is.function(w) & !is.character(w)){
