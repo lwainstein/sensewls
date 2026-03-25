@@ -25,7 +25,7 @@ Must be a subinterval of the unit interval.}
 \item{sig_contour}{A single logical, indicating whether or not to plot the contour line for the \emph{first}
 adjusted estimate that is statistically insignificant (at the \code{sig_alpha} level). Default value is \code{FALSE}.}
 
-\item{sig_alpha}{Number between 0 and 1. Updated level of significance for the \code{sig_countour} line. If \code{NULL}, then assumes the significance level from provided \code{sensewls_obj}. Default value is \code{NULL}.}
+\item{sig_alpha}{Number between 0 and 1. Updated level of significance for the \code{sig_contour} line. If \code{NULL}, then assumes the significance level from provided \code{sensewls_obj}. Default value is \code{NULL}.}
 
 \item{palette}{An argument which is supplied to \code{scale_color_brewer} to
 color the scatterplot with a seqential palette.}

@@ -41,27 +41,35 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
   y <- df[, outcome]
 
   ### Treatment Bounds
+  # Weighted distribution
   wDperpX <- lm(as.formula(paste(treatment, '~ . -', outcome)),
                 data = X, weights = w)$residuals
   wDperpXrem <- lm(as.formula(paste(treatment, '~ . -', outcome)),
                    data = Xrem, weights = w)$residuals
 
   wvar.DperpX <- mean(w * wDperpX^2)
+  if(wvar.DperpX<0) wvar.DperpX <- 0
   wvar.DperpXrem <- mean(w* wDperpXrem^2)
+  if(wvar.DperpXrem<0) wvar.DperpXrem <- 0
 
   wR2.DXsub.Xrem <- (wvar.DperpXrem - wvar.DperpX) / wvar.DperpXrem
   if(wR2.DXsub.Xrem<0) wR2.DXsub.Xrem <- 0
+  if(wR2.DXsub.Xrem>1) wR2.DXsub.Xrem <- 1
 
+  # Semi-weighted distribution
   w2DperpX <- lm(as.formula(paste(treatment, '~ . -', outcome)),
                  data = X, weights = w2)$residuals
   w2DperpXrem <- lm(as.formula(paste(treatment, '~ . -', outcome)),
                     data = Xrem, weights = w2)$residuals
 
   w2var.DperpX <- mean(w2 * w2DperpX^2)
+  if(w2var.DperpX<0) w2var.DperpX <- 0
   w2var.DperpXrem <- mean(w2 * w2DperpXrem^2)
+  if(w2var.DperpXrem<0) w2var.DperpXrem <- 0
 
   w2R2.DXsub.Xrem <- (w2var.DperpXrem - w2var.DperpX) / w2var.DperpXrem
   if(w2R2.DXsub.Xrem<0) w2R2.DXsub.Xrem <- 0
+  if(w2R2.DXsub.Xrem>1) w2R2.DXsub.Xrem <- 1
 
   ### Outcome Bounds
   ## R_{wv}^2(Y~Xsub|D,X)
@@ -71,8 +79,14 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
                     data = Xrem, weights=w)$residuals
 
   wvar.wYperpXD <- mean(w * wYperpXD^2)
+  if(wvar.wYperpXD<0) wvar.wYperpXD <- 0
+
   wvar.wYperpXremD <- mean(w * wYperpXremD^2)
+  if(wvar.wYperpXremD<0) wvar.wYperpXremD <- 0
+
   wR2.YXsub.XremD <- (wvar.wYperpXremD - wvar.wYperpXD) / wvar.wYperpXremD
+  if(wR2.YXsub.XremD<0) wR2.YXsub.XremD <- 0
+  if(wR2.YXsub.XremD>1) wR2.YXsub.XremD <- 1
 
   ## Loop through the kd, ky combinations
   bound.d <- NULL
@@ -88,19 +102,24 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
       warning(warning_message)
     }
     temp.d <- ifelse(temp.d > 1, 1, temp.d)
+    if(temp.d<0) temp.d <- 0
     bound.d <- c(bound.d, temp.d)
 
     # Calculate Y-bound
     if(k1 * w2R2.DXsub.Xrem < 1){
       wR2.ZXsub.XremD <-  k1 * w2R2.DXsub.Xrem / (1 - k1 * w2R2.DXsub.Xrem) *
                           wR2.DXsub.Xrem / (1 - wR2.DXsub.Xrem)
+      if(wR2.ZXsub.XremD<0) wR2.ZXsub.XremD <- 0
+      if(wR2.ZXsub.XremD>1) wR2.ZXsub.XremD <- 1
 
       eta <- ( sqrt(k2) + sqrt(wR2.ZXsub.XremD) ) / sqrt(1-wR2.ZXsub.XremD)
+      if(eta<0) eta <- 0
       temp.y <- eta^2 * wR2.YXsub.XremD / (1 - wR2.YXsub.XremD)
       if(temp.y>1){
         warning_message <- paste0("Bound on wR2.YZ.DX is >1 when ky=", k2, " and benchmarking with (", paste(bounding_cov, collapse=", "), "). Setting wR2.YZ.DX=1.")
         warning(warning_message)
       }
+      if(temp.y<0) temp.y <- 0
       temp.y <- ifelse(temp.y > 1, 1, temp.y)
     }
     if(k1 * w2R2.DXsub.Xrem >= 1){
