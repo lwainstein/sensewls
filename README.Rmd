@@ -90,9 +90,7 @@ To specify the weighting mechanism or weights, we must specify:
 -   `estimand` A string indicating the desired estimand. Only necessary
     if `w` is a preset weighting method.
 
--   `normalize` A logical indicating whether or not to normalize the weights `w` per [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954) when either 
-    providing a numeric vector of weights, or a custom weighting function. Weights are 
-    automatically normalized when `w` is a preset weighting method.
+-   `normalize` A logical indicating whether or not to normalize the weights `w` per [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954) when either providing a numeric vector of weights, or a custom weighting function. Weights are automatically normalized when `w` is a preset weighting method.
 
 To relate an unobserved confounder's strength to that of one or multiple
 observed covariates, we need to supply `sensewls` the following arguments:
@@ -114,17 +112,13 @@ observed covariates, we need to supply `sensewls` the following arguments:
 
 
 To compute confidence intervals and $RV_{\alpha}$, `sensewls` takes the
-following six arguments:
+following seven arguments:
 
--   `inference` Whether to obtain uncertainty estimates. If set to the logical
-    `TRUE`, then a non-parametric bootstrap is performed that fixes the weights, and samples them
-    along with the data in each bootstrap sample.
-    If set to the character `"reestimate"`, a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
-    preset weights or an appropriate weighting function are chosen for `w`. The percentile method is used for all bootstrap confidence intervals.
-    If set to the logical `FALSE`, then no uncertainty estimates are provided. Default is `TRUE`.
+-   `inference` A string that indicates which inference option is used. The options are: (1) `"boot"`: Non-parametric bootstrap that re-estimates the weights in each bootstrap sample. This is only allowed if a preset weighting function or an appropriate, user-supplied weighting function is chosen for `w`. (2) `"fix_boot"`: Non-parametric bootstrap that fixes the weights, and samples them along with the data in each bootstrap sample. (3) `"HC0"`: (Adjusted) heteroscedastic-consistent standard errors ([White, 1980](https://www.jstor.org/stable/1912934)), without any finite sample corrections. (4) `"HC1"`: (Adjusted) heteroscedastic-consistent standard errors with finite sample correction ([MacKinnon and White, 1985](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587)). (5) `"none"`: No uncertainty estimates are provided. The default is `"HC1"`.
 
--   `cluster` An optional string indicating a column from the dataframe `df` for which to perform a cluster bootstrap if desired.
-    `inference` must be set to `TRUE` or `"reestimate"`. Defaulted to `NULL`.
+- `ci_method` A string indicating whether to obtain confidence intervals via the normal approximation method (`"normal"`), or the percentile method (`"percentile"`) when bootstrap inference is used (`inference` is `"boot"` or `"fix_boot"`). Default is `"normal"`.
+
+-   `cluster` An optional string indicating a column from the data frame `df` for which to cluster standard errors/bootstrap. If `inference` is `"HC0"` or `"HC1"`, then  cluster-robust standard errors ([White, 1984](https://www.sciencedirect.com/book/monograph/9780127466507/asymptotic-theory-for-econometricians)) are formed.  If `inference` is `"boot"` or `"fix_boot"`, then a cluster bootstrap is performed. Defaults to `NULL`.
 
 -   `alpha` Level of significance used for $RV_{\alpha}$ and the
     confidence intervals. Defaulted to `alpha = 0.05`.
@@ -143,11 +137,12 @@ a WLS estimate of the ATE using inverse propensity score weights. Note
 that the exchangeable unit in this setting is not the individual
 respondent, but rather the village that they reside in. Hence, we
 utilize a cluster bootstrap as our method of inference, specifying such
-through setting the `inference` argument to `TRUE` and providing
+through setting the `inference` argument to `"boot"` and providing
 the clustering variable `village` as the value for the `cluster` argument.
 Omitting an input to `cluster` while utilizing a bootstrap method for inference
 defaults to the nonparametric bootstrap where individual rows are
-resampled instead of sampling whole groups.
+resampled instead of sampling whole groups. We use the percentile method for confidence intervals
+after bootstrapping by setting the `ci_method` argument to `"percentile"`.
 
 ```{r}
 ### Read in data
@@ -181,7 +176,8 @@ sensewls_darfur <- sensewls(
                     w = "prop_score",
                     semiweights = NULL,
                     estimand = "ATE",
-                    inference = TRUE, 
+                    inference = "boot", 
+                    ci_method = "percentile",
                     cluster = "village",
                     par = F,
                     B = 1000
@@ -240,8 +236,8 @@ In detail,
     the WLS estimate to fail to be statistically distinguishable from
     zero at the $\alpha=0.05$ significance level (presuming the confounder
     influences the treatment and outcome equally). The observed value
-    of $RV_{\alpha=0.05} = 0.062$ posits that unobserved confounders which
-    account for 6.2% of the weighted residual variance have enough
+    of $RV_{\alpha=0.05} = 0.058$ posits that unobserved confounders which
+    account for 5.8% of the weighted residual variance have enough
     influence to render the estimate statistically
     insignificant.
 
@@ -269,7 +265,7 @@ the treatment as discussed in [Hazlett (2020)](https://journals.sagepub.com/doi/
 present, it would have strengths $R_w^2 (D \sim Z | X) = 0.011$ and $R_w^2 (Y \sim Z | X, D) = 0.108$, and the adjusted estimate would remain
 positive (+0.069) and statistically significant at the 0.05 level. However, a confounder that is
 two times as strong as `female` would render our estimate
-statistically insignificant at the $\alpha = 0.05$ threshold, as the adjusted 95\% confidence interval (-0.003, 0.099) contains 0. 
+statistically insignificant at the $\alpha = 0.05$ threshold, as the adjusted 95\% confidence interval (-0.005, 0.097) contains 0. 
 
 One may also visualize the adjusted estimates from these estimated covariate bounds using the `plot_sensewls()` function:
 ```{r}
@@ -295,9 +291,9 @@ new_output$Covariate_Bound_Estimates
 ```
 
 Setting our Type I error rate to a higher standard of $\alpha = 0.01$,
-we find that our findings no longer support a statistically
+we find that our findings still support a statistically
 significant estimate when a confounder as strong as `female` is
-present.
+present, but just barely. 
 
 ### Custom Weight Functions
 
@@ -354,7 +350,8 @@ output_customewights <- sensewls(treatment = "directlyharmed",
                   w = custom_ipw,
                   normalize = T,
                   semiweights = NULL,
-                  inference = TRUE, 
+                  inference = "boot", 
+                  ci_method = "percentile",
                   cluster = "village",
                   B = 1000, 
                   par = T, 
@@ -389,7 +386,13 @@ Hazlett, C. (2020). Angry or weary? How violence impacts attitudes toward peace 
 
 Ho, D. E., Imai, K., King, G., and Stuart, E. A. (2007). Matching as nonparametric preprocessing for reducing model dependence in parametric causal inference. *Political Analysis, 15*(3):199–236.
 
-Wainstein, L. & Hazlett, C. (2025). Sensitivity of weighted least squares estimators to omitted variables. *arXiv preprint arXiv:2508.02954*.
+MacKinnon, J. G. and White, H. (1985). Some heteroskedasticity-consistent covariance matrix estimators with improved finite sample properties. *Journal of Econometrics*, 29(3):305-325.
+
+Wainstein, L. and Hazlett, C. (2025). Sensitivity of weighted least squares estimators to omitted variables. *arXiv preprint arXiv:2508.02954*.
+
+White, H. (1980). A heteroskedasticity-consistent covariance matrix estimator and a direct test for heteroskedasticity. *Econometrica: Journal of the Econometric Society*: 817-838.
+
+White, H. (1984). Asymptotic theory for econometricians. Academic press. 
 
 
 

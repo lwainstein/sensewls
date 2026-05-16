@@ -12,7 +12,7 @@
 #' @param ylim A vector providing the lower and upper bounds of the y-axis.
 #' Must be a subinterval of the unit interval.
 #' @param sig_contour A single logical, indicating whether or not to plot the contour line for the *first*
-#' adjusted estimate that is statistically insignificant (at the `sig_alpha` level). Default value is `FALSE`.
+#' adjusted estimate that is statistically insignificant (at the `sig_alpha` level). Only allowed if bootstrap inference was used when creating `sensewls_obj`. Default value is `FALSE`.
 #' @param sig_alpha Number between 0 and 1. Updated level of significance for the `sig_contour` line. If `NULL`, then assumes the significance level from provided `sensewls_obj`. Default value is `NULL`.
 #' @param palette An argument which is supplied to `scale_color_brewer` to
 #' color the scatterplot with a seqential palette.
@@ -72,6 +72,9 @@ plot_sensewls <- function(sensewls_obj, xlim = c(0,1), ylim = c(0,1), sig_contou
   if(
     is.logical(sig_contour) & length(sig_contour)>1
   ){stop("`sig_contour` must be a single logical.\n")}
+  if(
+    sig_contour==TRUE & !(sensewls_obj$Inference_Method %in% c("boot", "fix_boot"))
+  ){stop("`sig_contour=TRUE` is only allowed when bootstrap inference (`'boot'` or `'fix_boot'`) was used to create `sensewls_obj`.\n")}
 
   # sig_alpha
   if(!is.null(sig_alpha)){

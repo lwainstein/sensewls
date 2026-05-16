@@ -13,7 +13,8 @@ Imports:
     ggrepel,
     dplyr,
     parallel,
-    ggplot2
+    ggplot2,
+    sandwich
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

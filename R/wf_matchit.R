@@ -24,9 +24,9 @@
 
 wf_matchit <- function(estimand, caliper = 0.1, ratio = 5){
   function(treatment, covars, df){
-    MatchIt::matchit(paste(treatment,
-                  "~",
-                  paste(covars, collapse = " + ")) %>%
+    MatchIt::matchit(paste0("`", treatment,
+                  "`~",
+                  paste(paste0("`", covars, "`"), collapse = " + ")) %>%
               as.formula,
             data = df,
             caliper = caliper,

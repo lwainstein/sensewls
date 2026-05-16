@@ -27,20 +27,23 @@
 #' Defaults to `NULL`. `semiweights` should be `NULL` unless `w` is a numeric vector of specified weights.
 #' @param estimand A string indicating the desired estimand. Only required if using preset weights. Can be `"ATT"`, `"ATC"`, or `"ATE"`. Default is `NULL`.
 #' @param alpha Number between 0 and 1. Level of significance used for RV_alpha, and (1 - alpha)*100% confidence intervals.
-#' Defaulted to alpha = 0.05 (and 95% confidence intervals).
-#' @param inference Whether to obtain uncertainty estimates. If set to the logical
-#' `"TRUE`, then a non-parametric bootstrap is performed that fixes the weights, and samples them
-#' along with the data in each bootstrap sample. If set to the character `"reestimate"`,
-#' a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
-#' a preset weighting function or an appropriate, user-supplied weighting function is chosen for `w`.
-#' The percentile method is used for all bootstrap confidence intervals.
-#' If set to the logical `FALSE`, then no uncertainty estimates are provided. Default is `TRUE`.
-#' @param cluster An optional string indicating a column from the data frame `df` for which to perform a cluster bootstrap if desired.
-#' `inference` must be set to `TRUE` or `"reestimate"`. Defaulted to `NULL`.
-#' @param B Number of bootstrap samples if used. Defaulted to 500.
+#' Defaulted to `alpha = 0.05` (and 95% confidence intervals).
+#' @param inference A string that indicates which inference option is used. Options are:
+#' (1) `"boot"`: Non-parametric bootstrap that re-estimates the weights in each bootstrap sample. This is only allowed if a preset weighting function or an appropriate, user-supplied weighting function is chosen for `w`.
+#' (2) `"fix_boot"`: Non-parametric bootstrap that fixes the weights, and samples them along with the data in each bootstrap sample.
+#' (3) `"HC0"`: (Adjusted) heteroscedastic-consistent standard errors ([White, 1980](https://www.jstor.org/stable/1912934)), without any finite sample corrections.
+#' (4) `"HC1"`: (Adjusted) heteroscedastic-consistent standard errors with finite sample correction ([MacKinnon and White, 1985](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587)).
+#' (5) `"none"`: No uncertainty estimates are provided.
+#' Default is `"HC1"`.
+#' @param ci_method A string indicating whether to obtain confidence intervals via the normal approximation method (`"normal"`), or the percentile method (`"percentile"`) when bootstrap inference is used (`inference` is `"boot"` or `"fix_boot"`). Default is `"normal"`.
+#' @param cluster An optional string indicating a column from the data frame `df` for which to cluster standard errors/bootstrap.
+#' If `inference` is `"HC0"` or `"HC1"`, then  cluster-robust standard errors ([White, 1984](https://www.sciencedirect.com/book/monograph/9780127466507/asymptotic-theory-for-econometricians)) are formed.
+#' If `inference` is `"boot"` or `"fix_boot"`, then a cluster bootstrap is performed.
+#' Defaults to `NULL`.
+#' @param B Number of bootstrap samples if `inference` is `"boot"` or `"fix_boot"`. Defaults to 500.
 #' @param par Boolean for whether bootstrapping should be parallelized through
-#' the `parallel` library. Defaulted to `FALSE`.
-#' @param ncpus Number of cpus used if `par` is set to `TRUE`. Defaulted to `NULL` and
+#' the `parallel` library when `inference` is `"boot"` or `"fix_boot"`. Defaulted to `FALSE`.
+#' @param ncpus Number of cpus used if `par` is set to `TRUE` (and `inference` is `"boot"` or `"fix_boot"`). Defaulted to `NULL` and
 #' must be supplied if `par` is set to true.
 #' @param ... Additional arguments passed to preset weighting functions.
 #' Currently supports providing `caliper` and `ratio` to the [MatchIt::matchit()] weighting function
@@ -49,7 +52,7 @@
 #'
 #' @returns
 #' A sensewls object containing a variety of sensitivity statistics. The output object can be plotted using the
-#'  `plot_sensewls()` function. Significance levels and `q` threshold for robustness values and confidnece intervals
+#'  `plot_sensewls()` function. Significance levels and `q` threshold for robustness values and confidence intervals
 #'  can be changed by applying the `alter_sensewls()` function.
 #'
 #'
@@ -75,8 +78,8 @@
 #'    bounding_covars = "female",
 #'    kd = 1:3,
 #'    w = "matchit",
-#'    estimand = "ATE",
-#'    inference = TRUE,
+#'    estimand = "ATT",
+#'    inference = "HC1",
 #'    cluster = "village",
 #'    par = T,
 #'    ncpus = 7,
@@ -87,6 +90,7 @@
 #'
 #'
 #' @import dplyr
+#' @import sandwich
 #'
 #' @export
 #'
@@ -95,7 +99,7 @@
 sensewls <- function(df, treatment, outcome, covars,
                 bounding_covars, kd = 1, ky = kd,
                 w, semiweights = NULL, normalize = FALSE, estimand = NULL,
-                inference=TRUE, alpha = 0.05, cluster = NULL,
+                inference="HC1", ci_method="normal", alpha = 0.05, cluster = NULL,
                 B = 500, par = F, ncpus = NULL,
                 ...)
   {
@@ -226,20 +230,36 @@ sensewls <- function(df, treatment, outcome, covars,
 
   # inference
   if(
-    !(is.logical(inference) | is.character(inference))
-  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'reestimate'`.\n")}
-  if(
-    is.logical(inference) & length(inference)>1
-  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'reestimate'`.\n")}
+    !is.character(inference)
+  ){stop("`inference` must be a single character string.\n")}
   if(
     is.character(inference) & length(inference)>1
-  ){stop("`inference` must be either `TRUE`, `FALSE`, or `'reestimate'`.\n")}
-  if(is.numeric(w) & inference=="reestimate"){
-    stop("Bootstrap cannot re-estimate weights if they are specified with `w`. `inference` must be set to `TRUE` or `FALSE`.\n")
+  ){stop("`inference` must be a single character string.\n")}
+  if(
+    !(inference %in% c("boot", "fix_boot", "HC0", "HC1", "none"))
+  ){stop("`inference` must one of  `'boot'`, `'fix_boot'`, `'HC0'`, `'HC1'`, or `'none'`.\n")}
+  if(is.numeric(w) & inference=="boot"){
+    stop("Bootstrap cannot re-estimate weights if they are specified with `w`. `inference` must be set to `'fix_boot'`, `'HC0'`, `'HC1'`, or `'none'`.\n")
+  }
+
+  # ci_method
+  if(inference!="none"){ # only check if they ask for inference
+    if(
+      !is.character(ci_method)
+      ){stop("`ci_method` must be a single character string.\n")}
+    if(
+      is.character(ci_method) & length(ci_method)>1
+    ){stop("`ci_method` must be a single character string.\n")}
+    if(
+      !(ci_method %in% c("normal", "percentile"))
+    ){stop("`ci_method` must one of  `'normal'` or `'percentile'`.\n")}
+    if(
+      ci_method=="percentile" & (inference %in% c("HC0", "HC1"))
+    ){stop("`ci_method` must be `'normal'` if using a closed-form inference method (`'HCO'` or `'HC1'`).\n")}
   }
 
   # cluster
-  if( !is.null(cluster) & (inference==TRUE | inference=="reestimate") ){ # only check cluster if it's not NULL
+  if( !is.null(cluster) & inference!="none" ){ # only check cluster if it's not NULL
     if(
       !is.character(cluster)
     ){stop("`cluster` must be a single character string.\n")}
@@ -252,7 +272,7 @@ sensewls <- function(df, treatment, outcome, covars,
   }
 
   # B, par, and cpus
-  if(inference==TRUE | inference=="reestimate"){
+  if(inference=="fix_boot" | inference=="boot"){
     if(
       !is.numeric(B)
     ){stop("`B` must be a single number.\n")}
@@ -265,7 +285,7 @@ sensewls <- function(df, treatment, outcome, covars,
   }
 
   # par
-  if(inference==TRUE | inference=="reestimate"){
+  if(inference=="fix_boot" | inference=="boot"){
     if(
       !is.logical(par)
     ){stop("`par` must be a single logical.\n")}
@@ -275,7 +295,7 @@ sensewls <- function(df, treatment, outcome, covars,
   }
 
   # ncpus
-  if( (inference==TRUE | inference=="reestimate") & par==TRUE ){
+  if( (inference=="fix_boot" | inference=="boot") & par==TRUE ){
     if(
       !is.numeric(ncpus)
     ){stop("`ncpus` must be a single number.\n")}
@@ -320,17 +340,6 @@ sensewls <- function(df, treatment, outcome, covars,
 
 
   ##### SET-UP
-  ### Define a string for the CI_method
-  if(inference==TRUE){
-    CI_method <- "fixed_weights"
-  }
-  if(inference=="reestimate"){
-    CI_method <- "reestimate_weights"
-  }
-  if(inference==FALSE){
-    CI_method <- "none"
-  }
-
   ### Set up data
   # Only keep the variables we need
   df <- df[, colnames(df) %in% c(treatment, outcome, covars)]
@@ -448,7 +457,7 @@ sensewls <- function(df, treatment, outcome, covars,
 
   ### build WLS model to check for significance of weighted treatment effect
   model <- do.call("lm",
-                   list(as.formula(paste(outcome, "~.", sep = "")),
+                   list(as.formula(paste0("`", outcome, "`~.")),
                         data = df,
                         weights = weights))
 
@@ -461,84 +470,217 @@ sensewls <- function(df, treatment, outcome, covars,
                 cov_bound_partials[,'bound.d']
                 ) * bias_stats['sd_ratio'])
 
-  ###  Inference SE, CI, and Stat sig calculations
-  # If you actually wanted inference
-  if(CI_method %in% c("reestimate_weights", "fixed_weights")){
+  ###  Inference: SE, CI, and Stat sig calculations
+  # Bootstrap Inference
+  if(inference %in% c("boot", "fix_boot")){
     # Run bootstrap -- calculates bootstrapped wls_estimates and sd ratios
-    if(CI_method == "reestimate_weights"){
+    if(inference == "boot"){
       boot_stats <- wls_bias_stats_boot(weight_function, B, strata = cluster, par = par, ncpus = ncpus,
                                         treatment = treatment, outcome = outcome, df= df,
                                         covars = covars)
     }
-    if(CI_method == "fixed_weights"){
+    if(inference == "fix_boot"){
       boot_stats <- wls_bias_stats_boot_fixed(weights, B, strata = cluster, par = par, ncpus = ncpus,
                                         treatment = treatment, outcome = outcome, df= df,
                                         covars = covars)
     }
 
-    # calculate SE from the bootstrap
+    # calculate original WLS SE
     wls_se_est <- sd(boot_stats[,1])
 
-    # Make a function that will calculate a CI. Creating a function so we can "alter" the output later based on `alpha` chosen
-    calc_adjusted_CIs <- function(alpha){
+    # Make a function that will calculate original CI. Creating a function so we can "alter" the output later based on `alpha` chosen.
+    calc_wls_CI <- function(alpha){
+      if(ci_method=="percentile") wls_ci <- quantile(boot_stats[,1], probs = c(alpha/2, 1 - alpha/2))
+      if(ci_method=="normal"){
+        wls_ci_lower <- bias_stats['wls_estimate'] - qnorm(1 - alpha / 2) * wls_se_est
+        wls_ci_upper <- bias_stats['wls_estimate'] + qnorm(1 - alpha / 2) * wls_se_est
+        wls_ci <- c(wls_ci_lower, wls_ci_upper)
+      }
+      return(wls_ci)
+    }
+
+    wls_ci <- calc_wls_CI(alpha)
+
+    # Make a function that will calculate adjusted SE and CI. Creating a function so we can "alter" the output later based on `alpha` chosen
+    calc_adjusted_inference <- function(alpha, r2d, r2y){
+      # Calculate adjusted estimates
+      temp_adjestimates <- wls_sign * (abs(bias_stats['wls_estimate']) - wls_bias_standardized(r2y,r2d) * bias_stats['sd_ratio'])
+
       # If there is more than one benchmarking bound we need
-      if(nrow(cov_bound_partials)>1){
-        temp <- boot_stats %>%
+      if(length(r2d)>1){
+        # Get adjusted estimates based on sentivity parameters
+        boot_adjestimates <- boot_stats %>%
             apply(1,
               function(r){
-                wls_sign * (abs(r[1]) - wls_bias_standardized(cov_bound_partials[,'bound.y'],
-                                     cov_bound_partials[,'bound.d']) * r[2])
-              }) %>%
+                wls_sign * (abs(r[1]) - wls_bias_standardized(r2y,
+                                                              r2d) * r[2])
+              })
+
+        # Calculated adjusted SE
+        temp_se <- boot_adjestimates %>%
+          apply(1, sd, na.rm=TRUE) %>%
+          as.matrix()
+
+        # calculate adjusted CI
+        if(ci_method=="percentile"){
+          temp_ci <- boot_adjestimates %>%
             apply(1, quantile, probs = c(alpha / 2, 1 - alpha / 2), na.rm=TRUE) %>%
             t()
-        return(temp)
+        }
+        if(ci_method=="normal"){
+          temp_ci_lower <- as.matrix(temp_adjestimates) - qnorm(1 - alpha / 2) * temp_se
+          temp_ci_upper <- as.matrix(temp_adjestimates) + qnorm(1 - alpha / 2) * temp_se
+          temp_ci <- cbind(temp_ci_lower, temp_ci_upper)
+        }
       }
+
       # If there is only one benchmarking bound we need
-      if(nrow(cov_bound_partials)==1){
-        temp <- boot_stats %>%
+      if(length(r2d)==1){
+        # Get adjusted estimates based on sentivity parameters
+        boot_adjestimates <- boot_stats %>%
           apply(1,
                 function(r){
-                  wls_sign * (abs(r[1]) - wls_bias_standardized(cov_bound_partials[,'bound.y'],
-                                                        cov_bound_partials[,'bound.d']) * r[2])
+                  wls_sign * (abs(r[1]) - wls_bias_standardized(r2y,
+                                                                r2d) * r[2])
                 }) %>%
           as.numeric()
-        temp <- quantile(temp, probs = c(alpha / 2, 1 - alpha / 2), na.rm=TRUE)
-        temp <- t(as.matrix(temp))
-        return(temp)
+
+        # Calculated adjusted SE
+        temp_se <- as.matrix(sd(boot_adjestimates))
+
+        # Calculate adjusted CI
+        if(ci_method=="percentile"){
+          temp_ci <- quantile(boot_adjestimates, probs = c(alpha / 2, 1 - alpha / 2), na.rm=TRUE)
+          temp_ci <- t(as.matrix(temp_ci))
+        }
+        if(ci_method=="normal"){
+          temp_ci_lower <- temp_adjestimates - qnorm(1 - alpha / 2) * temp_se
+          temp_ci_upper <- temp_adjestimates + qnorm(1 - alpha / 2) * temp_se
+          temp_ci <- cbind(temp_ci_lower, temp_ci_upper)
+        }
+      }
+
+      # Compile results
+      temp_results <- list(
+        "se" = temp_se,
+        "ci" = temp_ci
+      )
+      return(temp_results)
+    }
+  }
+
+  # Closed form inference
+  if(inference %in% c("HC0", "HC1")){
+
+    # Get sqrt(w)-transformed model
+    sqrtW <- diag(sqrt(weights))
+    sqrtw_X <- sqrtW %*% model.matrix(model)
+    sqrtw_y <- sqrtW %*% df[, outcome]
+    sqrtw_model <- lm(sqrtw_y ~ 0 + sqrtw_X)
+
+    # Get unadjusted variance matrix
+    if(is.null(cluster)){
+      varmat <- vcovHC(sqrtw_model, type="HC0")
+      if(inference=="HC1") varmat <- (sum(weights!=0) / (sum(weights!=0) - sum(!is.na(sqrtw_model$coefficients)))) * varmat
+    }
+    if(!is.null(cluster)){
+      if(inference=="HC0") varmat <- vcovCL(sqrtw_model, type="HC0", cluster = df[, cluster], cadjust=FALSE)
+      if(inference=="HC1"){
+        varmat <- vcovCL(sqrtw_model, type="HC0", cluster = df[, cluster], cadjust=TRUE)
+        varmat <- (sum(weights!=0) / (sum(weights!=0) - sum(!is.na(sqrtw_model$coefficients)))) * varmat
       }
     }
 
-    # Apply the function
-    adjusted_CIs <- calc_adjusted_CIs(alpha)
+    # Calculated standard WLS SE
+    wls_se_est <- sqrt(diag(varmat))[paste0("sqrtw_X", treatment)]
+
+    # Make a function that will calculate original CI. Creating a function so we can "alter" the output later based on `alpha` chosen.
+    calc_wls_CI <- function(alpha){
+      wls_ci_lower <- bias_stats['wls_estimate'] - qnorm(1 - alpha / 2) * wls_se_est
+      wls_ci_upper <- bias_stats['wls_estimate'] + qnorm(1 - alpha / 2) * wls_se_est
+      wls_ci <- c(wls_ci_lower, wls_ci_upper)
+      return(wls_ci)
+    }
+
+    wls_ci <- calc_wls_CI(alpha)
+
+    # Make a function that will calculate a SE and CI. Creating a function so we can "alter" the output later based on `alpha` chosen
+    calc_adjusted_inference <- function(alpha, r2d, r2y){
+
+      # Calculate adjusted estimates
+      temp_adjestimates <- wls_sign * (abs(bias_stats['wls_estimate']) - wls_bias_standardized(r2y,r2d) * bias_stats['sd_ratio'])
+
+      # Get adjusted SEs
+      temp_se <- sqrt(1 - r2y) / sqrt(1 - r2d) * wls_se_est
+      if(inference=="HC1"){
+        denom_old <- sum(weights!=0) - sum(!is.na(sqrtw_model$coefficients))
+        temp_se <- temp_se * sqrt(denom_old / (denom_old - 1))
+      }
+      temp_se <- as.matrix(temp_se)
+
+      # get adjusted CIs
+      temp_ci_lower <- temp_adjestimates - qnorm(1 - alpha / 2) * temp_se
+      temp_ci_upper <- temp_adjestimates + qnorm(1 - alpha / 2) * temp_se
+      temp_ci <- cbind(temp_ci_lower, temp_ci_upper)
+
+      # Compile results
+      temp_results <- list(
+        "se" = temp_se,
+        "ci" = temp_ci
+      )
+      return(temp_results)
+    }
   }
 
   # if you don't want inference. But will still need to make sure named output is in the right format/dimension to compile
-  if(CI_method == "none"){
+  if(inference == "none"){
     # SE should be NA
     wls_se_est <- NA
 
-    # CI function should just output NA upper and lower bounds (cols=2), the same number of times as we have bounds (rows=same # as adjusted_estimates)
-    calc_adjusted_CIs <- function(alpha){
-      return(matrix(NA, nrow=length(adjusted_estimates), ncol=2))
+    # CI function should just spit out c(NA, NA)
+    calc_wls_CI <- function(alpha){
+      return(c(NA, NA))
     }
 
-    # Actual CIs should just print out the same thing as the calc_adjusted_CIs function would give you.
-    adjusted_CIs <- matrix(NA, nrow=length(adjusted_estimates), ncol=2)
+    wls_ci <- calc_wls_CI(alpha)
+
+    # CI function should just output NA SE (cols=1), and upper/lower bounds (cols=2), the same number of times as we have bounds (rows=same # as adjusted_estimates)
+    calc_adjusted_inference <- function(alpha, r2d, r2y){
+      # Get empty matrices of results of the right dimension
+      temp_se <- matrix(NA, nrow=length(adjusted_estimates), ncol=1)
+      temp_ci <- matrix(NA, nrow=length(adjusted_estimates), ncol=2)
+
+      temp_results <- list(
+        "se" = temp_se,
+        "ci" = temp_ci
+      )
+      return(temp_results)
+    }
   }
 
+  # Apply the function, and pull out results
+  temp_results <- calc_adjusted_inference(alpha=alpha, r2d=cov_bound_partials$bound.d, r2y=cov_bound_partials$bound.y)
+
+  adjusted_SEs <- temp_results$se
+  adjusted_CIs <- temp_results$ci
+
   ### Compile the Benchmarking results information. We will compile straight WLS results later.
-  bound_covar_stats <- cbind(adjusted_CIs,
-                             adjusted_estimates,
-                             cov_bound_partials)
-
-  colnames(bound_covar_stats) <- c("Lower",
-                                   "Upper",
-                                   "Adjusted_Est",
-                                   "wR2.DZ.X",
-                                   "wR2.YZ.DX",
-                                   "Bounding_Var",
-                                   "Strength")
-
+  bound_covar_stats <- cbind(
+    adjusted_estimates,
+    adjusted_SEs,
+    adjusted_CIs,
+    cov_bound_partials
+  )
+  colnames(bound_covar_stats) <- c(
+    "Adjusted_Est",
+    "Adjusted_SE",
+    "CI_Lower",
+    "CI_Upper",
+    "wR2.DZ.X",
+    "wR2.YZ.DX",
+    "Bounding_Var",
+    "Strength"
+  )
   rownames(bound_covar_stats) <- row.names(cov_bound_partials)
 
 
@@ -552,13 +694,13 @@ sensewls <- function(df, treatment, outcome, covars,
   ### RV_{q=1}
   # Get necessary partialed out vectors
   wYperpX <- lm(as.formula(
-                  paste(outcome, "~ . -", treatment, sep = "") # note dataframe has been thinned out
+                  paste0("`", outcome, "`~ . -`", treatment, "`") # note dataframe has been thinned out
                   ),
                 data = df,
                 weights=weights)$residuals
 
   wYperpXD <- lm(as.formula(
-                   paste(outcome, "~ .",  sep = "") # note that the dataframe has been thinned out
+                   paste0("`", outcome, "`~ .") # note that the dataframe has been thinned out
                   ),
                 data = df,
                 weights=weights)$residuals
@@ -580,25 +722,18 @@ sensewls <- function(df, treatment, outcome, covars,
 
   ### RV_alpha
   # If we actually want inference
-  if(CI_method %in% c("reestimate_weights", "fixed_weights")){
+  if(inference!="none"){
     # Make a function -- we'll need it in order to alter alpha later.
-    calc_RV_alpha <- function(alpha, grid_resolution = 1000){
+    calc_RV_alpha <- function(alpha, grid_resolution = 10000){
 
-        # First check significance
-        CI <- quantile(boot_stats[,1], probs = c(alpha/2, 1 - alpha/2))
+        # First check significance of original WLS estimate
+        CI <- calc_wls_CI(alpha)
         sig_bool <- CI[1] > 0 | CI[2]<0 #true if significant, false otherwise
 
         # If significant, grab RV_alpha
         if(sig_bool==TRUE){
-          grid_strengths <- seq(0, 1, length.out = grid_resolution)
-          CI_grid <- boot_stats %>%
-            apply(1,
-                  function(r){
-                    wls_sign * (abs(r[1]) - wls_bias_standardized(grid_strengths,
-                                         grid_strengths) * r[2])
-                  }) %>%
-            apply(1, quantile, probs = c(alpha / 2, 1 - alpha / 2), na.rm=TRUE) %>%
-            t()
+          grid_strengths <- seq(0, 1, length.out = grid_resolution + 1)
+          CI_grid <- calc_adjusted_inference(alpha, r2d=grid_strengths, r2y=grid_strengths)$ci
 
           contains_zero <- apply(CI_grid, 1, function(r){r[1] < 0 & r[2] > 0})
           out <- grid_strengths[which.max(contains_zero)]
@@ -616,7 +751,7 @@ sensewls <- function(df, treatment, outcome, covars,
   }
 
   # If we don't want inference. But still need to output correctly named objects so code works below.
-  if(CI_method=="none"){
+  if(inference=="none"){
     calc_RV_alpha <- function(alpha){
       return(NA)
     }
@@ -635,23 +770,8 @@ sensewls <- function(df, treatment, outcome, covars,
 
 
   ###### (3) Compile Straight WLS results
-  ### Make CI function
-  # If we actually want inference. Making a function because the alter function needs it
-  if(CI_method %in% c("reestimate_weights","fixed_weights")){
-    calc_wls_CI <- function(alpha){
-      return(quantile(boot_stats[,1], probs = c(alpha/2, 1 - alpha/2)))
-    }
-  }
-  # If we don't want inference, but still require a function that returns something of the correct dimension
-  if(CI_method=="none"){
-    calc_wls_CI <- function(alpha){
-      return(c(NA, NA))
-    }
-  }
-
-  ### Calculate CI and Compile
-  wls_data <- c(bias_stats[1], wls_se_est,  calc_wls_CI(alpha))
-  names(wls_data) <- c("WLS_estimate", "Est_SE", "Lower", "Upper")
+  wls_data <- c(bias_stats[1], wls_se_est,  wls_ci)
+  names(wls_data) <- c("WLS_Estimate", "Est_SE", "CI_Lower", "CI_Upper")
 
 
 
@@ -667,14 +787,16 @@ sensewls <- function(df, treatment, outcome, covars,
   sensewls_output <- list("wls_data" = wls_data,
        "RVs" = robustness_values,
        "Covariate_Bound_Estimates" = bound_covar_stats,
-       "Inference_Method" = CI_method,
+       "Inference_Method" = inference,
+       "CI_Method" = ci_method,
        "alpha" = alpha,
        "weights" = weights,
+       "bounding_covars" = bounding_covars,
        "semiweights" = semiweights,
        "calc_wls_CI" = calc_wls_CI,
        "calc_RV_q" = calc_RV_q,
        "calc_RV_alpha" = calc_RV_alpha,
-       "calc_adjusted_CIs" = calc_adjusted_CIs,
+       "calc_adjusted_inference" = calc_adjusted_inference,
        'plot_data' = bias_stats)
 
   ### Assign class

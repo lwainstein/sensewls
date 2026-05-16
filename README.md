@@ -133,23 +133,35 @@ arguments:
     association with the outcome variable.
 
 To compute confidence intervals and $RV_{\alpha}$, `sensewls` takes the
-following six arguments:
+following seven arguments:
 
--   `inference` Whether to obtain uncertainty estimates. If set to the
-    logical `TRUE`, then a non-parametric bootstrap is performed that
-    fixes the weights, and samples them along with the data in each
-    bootstrap sample. If set to the character `"reestimate"`, a
-    non-parametric bootstrap is performed that re-estimates the weights
-    in each bootstrap sample. This is only allowed if preset weights or
-    an appropriate weighting function are chosen for `w`. The percentile
-    method is used for all bootstrap confidence intervals. If set to the
-    logical `FALSE`, then no uncertainty estimates are provided. Default
-    is `TRUE`.
+-   `inference` A string that indicates which inference option is used.
+    The options are: (1) `"boot"`: Non-parametric bootstrap that
+    re-estimates the weights in each bootstrap sample. This is only
+    allowed if a preset weighting function or an appropriate,
+    user-supplied weighting function is chosen for `w`. (2)
+    `"fix_boot"`: Non-parametric bootstrap that fixes the weights, and
+    samples them along with the data in each bootstrap sample. (3)
+    `"HC0"`: (Adjusted) heteroscedastic-consistent standard errors
+    ([White, 1980](https://www.jstor.org/stable/1912934)), without any
+    finite sample corrections. (4) `"HC1"`: (Adjusted)
+    heteroscedastic-consistent standard errors with finite sample
+    correction ([MacKinnon and White,
+    1985](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587)). (5)
+    `"none"`: No uncertainty estimates are provided. The default is
+    `"HC1"`.
 
--   `cluster` An optional string indicating a column from the dataframe
-    `df` for which to perform a cluster bootstrap if desired.
-    `inference` must be set to `TRUE` or `"reestimate"`. Defaulted to
-    `NULL`.
+-   `ci_method` A string indicating whether to obtain confidence
+    intervals via the normal approximation method (`"normal"`), or the
+    percentile method (`"percentile"`) when bootstrap inference is used
+    (`inference` is `"boot"` or `"fix_boot"`). Default is `"normal"`.
+
+-   `cluster` An optional string indicating a column from the data frame
+    `df` for which to cluster standard errors/bootstrap. If `inference`
+    is `"HC0"` or `"HC1"`, then cluster-robust standard errors ([White,
+    1984](https://www.sciencedirect.com/book/monograph/9780127466507/asymptotic-theory-for-econometricians))
+    are formed. If `inference` is `"boot"` or `"fix_boot"`, then a
+    cluster bootstrap is performed. Defaults to `NULL`.
 
 -   `alpha` Level of significance used for $RV_{\alpha}$ and the
     confidence intervals. Defaulted to `alpha = 0.05`.
@@ -168,11 +180,13 @@ analysis on a WLS estimate of the ATE using inverse propensity score
 weights. Note that the exchangeable unit in this setting is not the
 individual respondent, but rather the village that they reside in.
 Hence, we utilize a cluster bootstrap as our method of inference,
-specifying such through setting the `inference` argument to `TRUE` and
+specifying such through setting the `inference` argument to `"boot"` and
 providing the clustering variable `village` as the value for the
 `cluster` argument. Omitting an input to `cluster` while utilizing a
 bootstrap method for inference defaults to the nonparametric bootstrap
-where individual rows are resampled instead of sampling whole groups.
+where individual rows are resampled instead of sampling whole groups. We
+use the percentile method for confidence intervals after bootstrapping
+by setting the `ci_method` argument to `"percentile"`.
 
 ``` r
 ### Read in data
@@ -206,7 +220,8 @@ sensewls_darfur <- sensewls(
                     w = "prop_score",
                     semiweights = NULL,
                     estimand = "ATE",
-                    inference = TRUE, 
+                    inference = "boot", 
+                    ci_method = "percentile",
                     cluster = "village",
                     par = F,
                     B = 1000
@@ -218,8 +233,8 @@ by calling:
 
 ``` r
 sensewls_darfur$wls_data
-#> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02691257   0.03737610   0.14079150
+#> WLS_Estimate       Est_SE     CI_Lower     CI_Upper 
+#>   0.08936507   0.02616902   0.03616962   0.13764840
 ```
 
 This estimation approach indicates that direct harm positively influence
@@ -236,7 +251,7 @@ standard error, and a confidence interval:
 ``` r
 sensewls_darfur$RV
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.06206206
+#>      0.02184304      0.13868612      0.05820000
 ```
 
 These sensitivity statistics include: (1) $R^2_w(Y\sim D|X)$, the
@@ -275,8 +290,8 @@ detail,
     for the WLS estimate to fail to be statistically distinguishable
     from zero at the $\alpha=0.05$ significance level (presuming the
     confounder influences the treatment and outcome equally). The
-    observed value of $RV_{\alpha=0.05} = 0.062$ posits that unobserved
-    confounders which account for 6.2% of the weighted residual variance
+    observed value of $RV_{\alpha=0.05} = 0.058$ posits that unobserved
+    confounders which account for 5.8% of the weighted residual variance
     have enough influence to render the estimate statistically
     insignificant.
 
@@ -297,11 +312,11 @@ with:
 
 ``` r
 sensewls_darfur$Covariate_Bound_Estimates
-#>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.016916257 0.12011880   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2  0.008558302 0.11162325   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3  0.008394967 0.11145740   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.003496256 0.09940695   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#>          Adjusted_Est Adjusted_SE     CI_Lower   CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
+#> female.1   0.06868699  0.02596973  0.015446243 0.11735805 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2   0.06012361  0.02597479  0.006482969 0.10894678 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3   0.05995600  0.02597491  0.006318434 0.10878215 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4   0.04777793  0.02598709 -0.005636442 0.09661741 0.02190869 0.2158987       female kd=2, ky=2
 ```
 
 Our analysis reports an initial estimate that is positive and
@@ -317,7 +332,7 @@ and the adjusted estimate would remain positive (+0.069) and
 statistically significant at the 0.05 level. However, a confounder that
 is two times as strong as `female` would render our estimate
 statistically insignificant at the $\alpha = 0.05$ threshold, as the
-adjusted 95% confidence interval (-0.003, 0.099) contains 0.
+adjusted 95% confidence interval (-0.005, 0.097) contains 0.
 
 One may also visualize the adjusted estimates from these estimated
 covariate bounds using the `plot_sensewls()` function:
@@ -343,22 +358,23 @@ new_output <- alter_sensewls(sensewls_darfur, alpha = 0.01, q = 0.9)
 
 ### Re-inspect results
 new_output$wls_data
-#> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02691257   0.01622206   0.15968279
+#> WLS_Estimate       Est_SE     CI_Lower     CI_Upper 
+#>   0.08936507   0.02616902   0.02085808   0.15312774
 new_output$RVs
 #>        wR2.YD.X      RV_{q=0.9} RV_{alpha=0.01} 
-#>      0.02184304      0.12575125      0.02802803
+#>      0.02184304      0.12575125      0.03630000
 new_output$Covariate_Bound_Estimates
-#>                 Lower     Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1 -0.003649297 0.1386058   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2 -0.011945156 0.1298767   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3 -0.012106761 0.1297058   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.023848743 0.1172921   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#>          Adjusted_Est Adjusted_SE     CI_Lower  CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
+#> female.1   0.06868699  0.02596973  0.001348835 0.1322107 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2   0.06012361  0.02597479 -0.007408622 0.1235484 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3   0.05995600  0.02597491 -0.007583338 0.1233788 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4   0.04777793  0.02598709 -0.020277932 0.1110600 0.02190869 0.2158987       female kd=2, ky=2
 ```
 
 Setting our Type I error rate to a higher standard of $\alpha = 0.01$,
-we find that our findings no longer support a statistically significant
-estimate when a confounder as strong as `female` is present.
+we find that our findings still support a statistically significant
+estimate when a confounder as strong as `female` is present, but just
+barely.
 
 ### Custom Weight Functions
 
@@ -420,7 +436,8 @@ output_customewights <- sensewls(treatment = "directlyharmed",
                   w = custom_ipw,
                   normalize = T,
                   semiweights = NULL,
-                  inference = TRUE, 
+                  inference = "boot", 
+                  ci_method = "percentile",
                   cluster = "village",
                   B = 1000, 
                   par = T, 
@@ -436,33 +453,33 @@ bootstrap.
 ``` r
 ### Check point estimates
 output_customewights$wls_data
-#> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02627349   0.03812035   0.14175264
+#> WLS_Estimate       Est_SE     CI_Lower     CI_Upper 
+#>   0.08936507   0.02597338   0.03844576   0.13619303
 sensewls_darfur$wls_data
-#> WLS_estimate       Est_SE        Lower        Upper 
-#>   0.08936507   0.02691257   0.03737610   0.14079150
+#> WLS_Estimate       Est_SE     CI_Lower     CI_Upper 
+#>   0.08936507   0.02616902   0.03616962   0.13764840
 
 ### Check robustness values
 output_customewights$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.06406406
+#>      0.02184304      0.13868612      0.06340000
 sensewls_darfur$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.06206206
+#>      0.02184304      0.13868612      0.05820000
 
 ### Check covariate bounds
 output_customewights$Covariate_Bound_Estimates
-#>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.018186554 0.11999200   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2  0.009931398 0.11098030   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3  0.009769824 0.11080392   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.001969924 0.09826256   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#>          Adjusted_Est Adjusted_SE     CI_Lower   CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
+#> female.1   0.06868699  0.02588552  0.018488418 0.11608695 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2   0.06012361  0.02587859  0.009909015 0.10754413 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3   0.05995600  0.02587849  0.009741095 0.10737692 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4   0.04777793  0.02587363 -0.002459769 0.09511079 0.02190869 0.2158987       female kd=2, ky=2
 sensewls_darfur$Covariate_Bound_Estimates
-#>                 Lower      Upper Adjusted_Est   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1  0.016916257 0.12011880   0.06868699 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2  0.008558302 0.11162325   0.06012361 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3  0.008394967 0.11145740   0.05995600 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4 -0.003496256 0.09940695   0.04777793 0.02190869 0.2158987       female kd=2, ky=2
+#>          Adjusted_Est Adjusted_SE     CI_Lower   CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
+#> female.1   0.06868699  0.02596973  0.015446243 0.11735805 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2   0.06012361  0.02597479  0.006482969 0.10894678 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3   0.05995600  0.02597491  0.006318434 0.10878215 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4   0.04777793  0.02598709 -0.005636442 0.09661741 0.02190869 0.2158987       female kd=2, ky=2
 ```
 
 ## References
@@ -479,6 +496,16 @@ Ho, D. E., Imai, K., King, G., and Stuart, E. A. (2007). Matching as
 nonparametric preprocessing for reducing model dependence in parametric
 causal inference. *Political Analysis, 15*(3):199–236.
 
-Wainstein, L. & Hazlett, C. (2025). Sensitivity of weighted least
+MacKinnon, J. G. and White, H. (1985). Some
+heteroskedasticity-consistent covariance matrix estimators with improved
+finite sample properties. *Journal of Econometrics*, 29(3):305-325.
+
+Wainstein, L. and Hazlett, C. (2025). Sensitivity of weighted least
 squares estimators to omitted variables. *arXiv preprint
 arXiv:2508.02954*.
+
+White, H. (1980). A heteroskedasticity-consistent covariance matrix
+estimator and a direct test for heteroskedasticity. *Econometrica:
+Journal of the Econometric Society*: 817-838.
+
+White, H. (1984). Asymptotic theory for econometricians. Academic press.

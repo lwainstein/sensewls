@@ -42,9 +42,9 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
 
   ### Treatment Bounds
   # Weighted distribution
-  wDperpX <- lm(as.formula(paste(treatment, '~ . -', outcome)),
+  wDperpX <- lm(as.formula(paste0("`",treatment, '`~ . -`', outcome, "`")),
                 data = X, weights = w)$residuals
-  wDperpXrem <- lm(as.formula(paste(treatment, '~ . -', outcome)),
+  wDperpXrem <- lm(as.formula(paste0("`", treatment, '`~ . -`', outcome, "`")),
                    data = Xrem, weights = w)$residuals
 
   wvar.DperpX <- mean(w * wDperpX^2)
@@ -57,9 +57,9 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
   if(wR2.DXsub.Xrem>1) wR2.DXsub.Xrem <- 1
 
   # Semi-weighted distribution
-  w2DperpX <- lm(as.formula(paste(treatment, '~ . -', outcome)),
+  w2DperpX <- lm(as.formula(paste0("`", treatment, '`~ . -`', outcome, "`")),
                  data = X, weights = w2)$residuals
-  w2DperpXrem <- lm(as.formula(paste(treatment, '~ . -', outcome)),
+  w2DperpXrem <- lm(as.formula(paste0("`", treatment, '`~ . -`', outcome, "`")),
                     data = Xrem, weights = w2)$residuals
 
   w2var.DperpX <- mean(w2 * w2DperpX^2)
@@ -73,9 +73,9 @@ covariate_bound <- function(bounding_cov, w2, treatment, outcome, w, kd, ky, df)
 
   ### Outcome Bounds
   ## R_{wv}^2(Y~Xsub|D,X)
-  wYperpXD <- lm(as.formula(paste(outcome, '~ .')),
+  wYperpXD <- lm(as.formula(paste0("`", outcome, '`~ .')),
                  data = X, weights=w)$residuals
-  wYperpXremD <- lm(as.formula(paste(outcome, '~ .')),
+  wYperpXremD <- lm(as.formula(paste0("`", outcome, '`~ .')),
                     data = Xrem, weights=w)$residuals
 
   wvar.wYperpXD <- mean(w * wYperpXD^2)

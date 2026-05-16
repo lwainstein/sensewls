@@ -20,9 +20,9 @@
 
 wf_prop_score <- function(estimand){
   function(treatment, covars, df){
-    psmodel <- glm(as.formula(paste(treatment,
-                                    " ~ ",
-                                    paste(covars, collapse = "+"))),
+    psmodel <- glm(as.formula(paste0("`", treatment,
+                                    "` ~ ",
+                                    paste(paste0("`", covars, "`"), collapse = "+"))),
                    family = binomial(link="logit"),
                    data = df)
 

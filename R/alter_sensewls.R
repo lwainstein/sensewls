@@ -62,7 +62,7 @@ alter_sensewls <- function(sensewls_obj, alpha = NULL, q = NULL){
     if(!is.null(alpha)){
       wls_CI <- sensewls_obj$calc_wls_CI(alpha)
       wls_data <- c(wls_data[1:2], wls_CI)
-      names(wls_data) <- c("WLS_estimate", "Est_SE", "Lower", "Upper")
+      names(wls_data) <- c("WLS_Estimate", "Est_SE", "CI_Lower", "CI_Upper")
     }
 
     ### Robustness Values
@@ -79,9 +79,17 @@ alter_sensewls <- function(sensewls_obj, alpha = NULL, q = NULL){
     ### Adjusted CIs
     cbes <- sensewls_obj$Covariate_Bound_Estimates
     if(!is.null(alpha)){
-      CIs_matrix <- sensewls_obj$calc_adjusted_CIs(alpha)
-      cbes[,'Lower'] <- CIs_matrix[,1]
-      cbes[,'Upper'] <- CIs_matrix[,2]
+      # Get adjusted inference
+      adjusted_inference <-
+        sensewls_obj$calc_adjusted_inference(
+          alpha,
+          r2d=cbes$wR2.DZ.X,
+          r2y=cbes$wR2.YZ.DX
+        )
+
+      # Put in results
+      cbes[,'CI_Lower'] <- adjusted_inference$ci[,1]
+      cbes[,'CI_Upper'] <- adjusted_inference$ci[,2]
     }
 
     ### Put everything together

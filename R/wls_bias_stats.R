@@ -24,7 +24,7 @@ wls_bias_stats <- function(treatment, outcome, df, model = NULL, weights){
 
   if(is.null(model)){
    model <- do.call("lm",
-                    list(as.formula(paste(outcome, "~.", sep = "")),
+                    list(as.formula(paste0("`", outcome, "`~.")),
                          data = df,
                          weights = weights)) #fit weighted OLS
   }
@@ -34,7 +34,7 @@ wls_bias_stats <- function(treatment, outcome, df, model = NULL, weights){
   sd_y_perp_xd <- sqrt(mean(weights * model$residuals^2))
 
   d_perp_x <- do.call("lm",
-                      list(as.formula(paste(treatment, " ~ . -", outcome, sep = "")),
+                      list(as.formula(paste0("`", treatment, "` ~ . - `", outcome, "`" )),
                            data =  df,
                            weights = weights))
 

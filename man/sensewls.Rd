@@ -16,7 +16,8 @@ sensewls(
   semiweights = NULL,
   normalize = FALSE,
   estimand = NULL,
-  inference = TRUE,
+  inference = "HC1",
+  ci_method = "normal",
   alpha = 0.05,
   cluster = NULL,
   B = 500,
@@ -57,26 +58,30 @@ Default is \code{FALSE}. But weights are normalized for all the preset weighting
 
 \item{estimand}{A string indicating the desired estimand. Only required if using preset weights. Can be \code{"ATT"}, \code{"ATC"}, or \code{"ATE"}. Default is \code{NULL}.}
 
-\item{inference}{Whether to obtain uncertainty estimates. If set to the logical
-\verb{"TRUE}, then a non-parametric bootstrap is performed that fixes the weights, and samples them
-along with the data in each bootstrap sample. If set to the character \code{"reestimate"},
-a non-parametric bootstrap is performed that re-estimates the weights in each bootstrap sample. This is only allowed if
-a preset weighting function or an appropriate, user-supplied weighting function is chosen for \code{w}.
-The percentile method is used for all bootstrap confidence intervals.
-If set to the logical \code{FALSE}, then no uncertainty estimates are provided. Default is \code{TRUE}.}
+\item{inference}{A string that indicates which inference option is used. Options are:
+(1) \code{"boot"}: Non-parametric bootstrap that re-estimates the weights in each bootstrap sample. This is only allowed if a preset weighting function or an appropriate, user-supplied weighting function is chosen for \code{w}.
+(2) \code{"fix_boot"}: Non-parametric bootstrap that fixes the weights, and samples them along with the data in each bootstrap sample.
+(3) \code{"HC0"}: (Adjusted) heteroscedastic-consistent standard errors (\href{https://www.jstor.org/stable/1912934}{White, 1980}), without any finite sample corrections.
+(4) \code{"HC1"}: (Adjusted) heteroscedastic-consistent standard errors with finite sample correction (\href{https://www.sciencedirect.com/science/article/abs/pii/0304407685901587}{MacKinnon and White, 1985}).
+(5) \code{"none"}: No uncertainty estimates are provided.
+Default is \code{"HC1"}.}
+
+\item{ci_method}{A string indicating whether to obtain confidence intervals via the normal approximation method (\code{"normal"}), or the percentile method (\code{"percentile"}) when bootstrap inference is used (\code{inference} is \code{"boot"} or \code{"fix_boot"}). Default is \code{"normal"}.}
 
 \item{alpha}{Number between 0 and 1. Level of significance used for RV_alpha, and (1 - alpha)*100\% confidence intervals.
-Defaulted to alpha = 0.05 (and 95\% confidence intervals).}
+Defaulted to \code{alpha = 0.05} (and 95\% confidence intervals).}
 
-\item{cluster}{An optional string indicating a column from the data frame \code{df} for which to perform a cluster bootstrap if desired.
-\code{inference} must be set to \code{TRUE} or \code{"reestimate"}. Defaulted to \code{NULL}.}
+\item{cluster}{An optional string indicating a column from the data frame \code{df} for which to cluster standard errors/bootstrap.
+If \code{inference} is \code{"HC0"} or \code{"HC1"}, then  cluster-robust standard errors (\href{https://www.sciencedirect.com/book/monograph/9780127466507/asymptotic-theory-for-econometricians}{White, 1984}) are formed.
+If \code{inference} is \code{"boot"} or \code{"fix_boot"}, then a cluster bootstrap is performed.
+Defaults to \code{NULL}.}
 
-\item{B}{Number of bootstrap samples if used. Defaulted to 500.}
+\item{B}{Number of bootstrap samples if \code{inference} is \code{"boot"} or \code{"fix_boot"}. Defaults to 500.}
 
 \item{par}{Boolean for whether bootstrapping should be parallelized through
-the \code{parallel} library. Defaulted to \code{FALSE}.}
+the \code{parallel} library when \code{inference} is \code{"boot"} or \code{"fix_boot"}. Defaulted to \code{FALSE}.}
 
-\item{ncpus}{Number of cpus used if \code{par} is set to \code{TRUE}. Defaulted to \code{NULL} and
+\item{ncpus}{Number of cpus used if \code{par} is set to \code{TRUE} (and \code{inference} is \code{"boot"} or \code{"fix_boot"}). Defaulted to \code{NULL} and
 must be supplied if \code{par} is set to true.}
 
 \item{...}{Additional arguments passed to preset weighting functions.
@@ -85,7 +90,7 @@ used by setting \code{w = 'matchit'}.}
 }
 \value{
 A sensewls object containing a variety of sensitivity statistics. The output object can be plotted using the
-\code{plot_sensewls()} function. Significance levels and \code{q} threshold for robustness values and confidnece intervals
+\code{plot_sensewls()} function. Significance levels and \code{q} threshold for robustness values and confidence intervals
 can be changed by applying the \code{alter_sensewls()} function.
 }
 \description{
