@@ -5,7 +5,7 @@ Authors@R:
     c(person("Leonard", "Wainstein", email = "lwainstein@reed.edu", role = c("aut", "cre")),
 	person("Wolfgang", "Brightenburg", email = "wbrigh@uw.edu", role = c("ctb"))
      )
-Description: This package implements the sensitivity analysis tools, described in Wainstein and Hazlett (2025), for weighted least squares estimators of treatment effects to omitted variables.
+Description: This package implements the sensitivity analysis tools, described in Wainstein and Hazlett (2026), for weighted least squares estimators of treatment effects to omitted variables.
 License: GPL (>= 3)
 Imports: 
     MatchIt,

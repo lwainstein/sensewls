@@ -95,7 +95,7 @@ can be changed by applying the \code{alter_sensewls()} function.
 }
 \description{
 This function performs the weighted sensitivity analysis for a weighted least squares
-estimator as described in \href{https://www.arxiv.org/abs/2508.02954}{Wainstein and Hazlett (2025)}. It returns an object of class \code{sensewls}
+estimator as described in \href{https://www.arxiv.org/abs/2508.02954}{Wainstein and Hazlett (2026)}. It returns an object of class \code{sensewls}
 containing a variety of sensitivity statistics. An output object can use the \code{plot_sensewls()}
 function for visualization.
 }

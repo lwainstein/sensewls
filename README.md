@@ -31,7 +31,7 @@ conclusions to unobserved confounding, i.e., “sensitivity analysis”.
 
 The `sensewls` package implements the sensitivity analysis tools
 proposed by [Wainstein and Hazlett
-(2025)](https://www.arxiv.org/abs/2508.02954), in which standardized
+(2026)](https://www.arxiv.org/abs/2508.02954), in which standardized
 statistics and covariate bounds are introduced to quantify the
 sensitivity of WLS estimates of causal estimands to unobserved
 confounding. These tools are the weighted extension to the tools
@@ -50,7 +50,7 @@ domain knowledge, we provide the following tutorial through an extended
 example, studying the average effects of exposure to violence in Darfur
 on attitudes towards peace. The data is accessed through the `sensemakr`
 package. The following example is a replication of the analysis done by
-[Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954).
+[Wainstein and Hazlett (2026)](https://www.arxiv.org/abs/2508.02954).
 Further details and discussion on this setting can be found in [Hazlett
 (2020)](https://journals.sagepub.com/doi/abs/10.1177/0022002719879217).
 
@@ -106,7 +106,7 @@ To specify the weighting mechanism or weights, we must specify:
 
 -   `normalize` A logical indicating whether or not to normalize the
     weights `w` per [Wainstein and Hazlett
-    (2025)](https://www.arxiv.org/abs/2508.02954) when either providing
+    (2026)](https://www.arxiv.org/abs/2508.02954) when either providing
     a numeric vector of weights, or a custom weighting function. Weights
     are automatically normalized when `w` is a preset weighting method.
 
@@ -398,7 +398,7 @@ in `df`. Below is an example of an implementation of an inverse
 propensity score weighting function for the ATE. Additionally, we use
 the `normalize=TRUE` option in the `sensewls` function to normalize the
 weights per [Wainstein and Hazlett
-(2025)](https://www.arxiv.org/abs/2508.02954).
+(2026)](https://www.arxiv.org/abs/2508.02954).
 
 ``` r
 ### Create custom inverse propensity score weighting function for the ATE
@@ -454,7 +454,7 @@ bootstrap.
 ### Check point estimates
 output_customewights$wls_data
 #> WLS_Estimate       Est_SE     CI_Lower     CI_Upper 
-#>   0.08936507   0.02597338   0.03844576   0.13619303
+#>   0.08936507   0.02728345   0.03397668   0.14624038
 sensewls_darfur$wls_data
 #> WLS_Estimate       Est_SE     CI_Lower     CI_Upper 
 #>   0.08936507   0.02616902   0.03616962   0.13764840
@@ -462,18 +462,18 @@ sensewls_darfur$wls_data
 ### Check robustness values
 output_customewights$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.06340000
+#>      0.02184304      0.13868612      0.05520000
 sensewls_darfur$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
 #>      0.02184304      0.13868612      0.05820000
 
 ### Check covariate bounds
 output_customewights$Covariate_Bound_Estimates
-#>          Adjusted_Est Adjusted_SE     CI_Lower   CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1   0.06868699  0.02588552  0.018488418 0.11608695 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2   0.06012361  0.02587859  0.009909015 0.10754413 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3   0.05995600  0.02587849  0.009741095 0.10737692 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4   0.04777793  0.02587363 -0.002459769 0.09511079 0.02190869 0.2158987       female kd=2, ky=2
+#>          Adjusted_Est Adjusted_SE     CI_Lower  CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
+#> female.1   0.06868699  0.02728790  0.013376600 0.1259592 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2   0.06012361  0.02730074  0.004740441 0.1175715 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3   0.05995600  0.02730102  0.004571410 0.1174074 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4   0.04777793  0.02732422 -0.007568834 0.1054792 0.02190869 0.2158987       female kd=2, ky=2
 sensewls_darfur$Covariate_Bound_Estimates
 #>          Adjusted_Est Adjusted_SE     CI_Lower   CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
 #> female.1   0.06868699  0.02596973  0.015446243 0.11735805 0.01095435 0.1079491       female kd=1, ky=1
@@ -500,7 +500,7 @@ MacKinnon, J. G. and White, H. (1985). Some
 heteroskedasticity-consistent covariance matrix estimators with improved
 finite sample properties. *Journal of Econometrics*, 29(3):305-325.
 
-Wainstein, L. and Hazlett, C. (2025). Sensitivity of weighted least
+Wainstein, L. and Hazlett, C. (2026). Sensitivity of weighted least
 squares estimators to omitted variables. *arXiv preprint
 arXiv:2508.02954*.
 

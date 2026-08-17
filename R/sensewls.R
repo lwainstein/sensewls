@@ -2,7 +2,7 @@
 #' Sensitivity analysis to omitted confounders for weighted least squares estimators of treatment effects
 #'
 #' @description This function performs the weighted sensitivity analysis for a weighted least squares
-#'  estimator as described in [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954). It returns an object of class `sensewls`
+#'  estimator as described in [Wainstein and Hazlett (2026)](https://www.arxiv.org/abs/2508.02954). It returns an object of class `sensewls`
 #'  containing a variety of sensitivity statistics. An output object can use the `plot_sensewls()`
 #'  function for visualization.
 #'

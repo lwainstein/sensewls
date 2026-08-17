@@ -2,7 +2,7 @@
 % Please edit documentation in R/w_normalize.R
 \name{w_normalize}
 \alias{w_normalize}
-\title{Normalize vector of weights per Wainstein and Hazlett (2025).}
+\title{Normalize vector of weights per Wainstein and Hazlett (2026).}
 \usage{
 w_normalize(w, treatment, df)
 }
@@ -17,5 +17,5 @@ w_normalize(w, treatment, df)
 Normalized weight vector
 }
 \description{
-Normalize vector of weights per \href{https://www.arxiv.org/abs/2508.02954}{Wainstein and Hazlett (2025)}.
+Normalize vector of weights per \href{https://www.arxiv.org/abs/2508.02954}{Wainstein and Hazlett (2026)}.
 }

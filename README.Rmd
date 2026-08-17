@@ -31,7 +31,7 @@ One common estimation approach here is a weighted least squares (WLS) linear reg
 However, even before considering violations to modeling assumptions implied by the linear regression or the weights, a first order concern is the risk of unobserved confounding that leads to persistent biases regardless of the conditioning technology used. The claim that all variables that must be accounted for to achieve unbiasedness is unlikely to hold in most real-world cases. The resulting bias in the estimate will be driven by the extent to which unobserved confounders, $Z$, are related to the treatment and outcome conditionally on the covariates. Transparency thus requires that we assess the sensitivity of one's conclusions to unobserved confounding, i.e., "sensitivity analysis".
 
 The `sensewls` package implements the sensitivity analysis tools
-proposed by [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954), in which standardized statistics and covariate bounds are introduced to quantify the
+proposed by [Wainstein and Hazlett (2026)](https://www.arxiv.org/abs/2508.02954), in which standardized statistics and covariate bounds are introduced to quantify the
 sensitivity of WLS estimates of causal estimands to unobserved
 confounding. These tools are the weighted extension to the tools proposed by [Cinelli and Hazlett (2020)](https://academic.oup.com/jrsssb/article/82/1/39/7056023), which are implemented through the [`sensemakr`](https://cran.r-project.org/web/packages/sensemakr/index.html) package. These tools allow researchers to quantify how strong an unobserved
 confounder (or group of confounders) would need to be in order to change
@@ -42,7 +42,7 @@ relation to the strength of observed covariate(s).
 To demonstrate the general workflow of `sensewls` and its reliance on domain
 knowledge, we provide the following tutorial through an extended
 example, studying the average effects of exposure to violence in Darfur
-on attitudes towards peace. The data is accessed through the `sensemakr` package. The following example is a replication of the analysis done by [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954). Further details and discussion on this setting can be found in [Hazlett (2020)](https://journals.sagepub.com/doi/abs/10.1177/0022002719879217).
+on attitudes towards peace. The data is accessed through the `sensemakr` package. The following example is a replication of the analysis done by [Wainstein and Hazlett (2026)](https://www.arxiv.org/abs/2508.02954). Further details and discussion on this setting can be found in [Hazlett (2020)](https://journals.sagepub.com/doi/abs/10.1177/0022002719879217).
 
 ## Installation
 
@@ -90,7 +90,7 @@ To specify the weighting mechanism or weights, we must specify:
 -   `estimand` A string indicating the desired estimand. Only necessary
     if `w` is a preset weighting method.
 
--   `normalize` A logical indicating whether or not to normalize the weights `w` per [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954) when either providing a numeric vector of weights, or a custom weighting function. Weights are automatically normalized when `w` is a preset weighting method.
+-   `normalize` A logical indicating whether or not to normalize the weights `w` per [Wainstein and Hazlett (2026)](https://www.arxiv.org/abs/2508.02954) when either providing a numeric vector of weights, or a custom weighting function. Weights are automatically normalized when `w` is a preset weighting method.
 
 To relate an unobserved confounder's strength to that of one or multiple
 observed covariates, we need to supply `sensewls` the following arguments:
@@ -312,7 +312,7 @@ Additionally, the weight function is expected to only output a vector of
 weights ordered such that the $i$th weight corresponds to the $i$th row
 in `df`. Below is an example of an implementation of an inverse propensity
 score weighting function for the ATE. Additionally, we use the `normalize=TRUE` 
-option in the `sensewls` function to normalize the weights per [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954).
+option in the `sensewls` function to normalize the weights per [Wainstein and Hazlett (2026)](https://www.arxiv.org/abs/2508.02954).
 
 ```{r}
 ### Create custom inverse propensity score weighting function for the ATE
@@ -388,7 +388,7 @@ Ho, D. E., Imai, K., King, G., and Stuart, E. A. (2007). Matching as nonparametr
 
 MacKinnon, J. G. and White, H. (1985). Some heteroskedasticity-consistent covariance matrix estimators with improved finite sample properties. *Journal of Econometrics*, 29(3):305-325.
 
-Wainstein, L. and Hazlett, C. (2025). Sensitivity of weighted least squares estimators to omitted variables. *arXiv preprint arXiv:2508.02954*.
+Wainstein, L. and Hazlett, C. (2026). Sensitivity of weighted least squares estimators to omitted variables. *arXiv preprint arXiv:2508.02954*.
 
 White, H. (1980). A heteroskedasticity-consistent covariance matrix estimator and a direct test for heteroskedasticity. *Econometrica: Journal of the Econometric Society*: 817-838.
 

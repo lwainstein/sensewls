@@ -5,9 +5,9 @@ ESS <- function(w){
 }
 
 
-#' Normalize vector of weights per Wainstein and Hazlett (2025).
+#' Normalize vector of weights per Wainstein and Hazlett (2026).
 #'
-#' @description Normalize vector of weights per [Wainstein and Hazlett (2025)](https://www.arxiv.org/abs/2508.02954).
+#' @description Normalize vector of weights per [Wainstein and Hazlett (2026)](https://www.arxiv.org/abs/2508.02954).
 #'
 #'
 #' @param w A weights vector.
