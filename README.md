@@ -5,7 +5,9 @@
 
 Please contact Leonard Wainstein (<lwainstein@reed.edu>) with questions.
 Thank you to Wolfgang Brightenburg (<wbrigh@uw.edu>) for creating the
-initial versions of this package and its README.
+initial versions of this package and its README. Thank you also to Erin
+Hartman and Angelica Anabel Remache Lopez for testing the package during
+its development.
 
 ## Overview
 
@@ -454,7 +456,7 @@ bootstrap.
 ### Check point estimates
 output_customewights$wls_data
 #> WLS_Estimate       Est_SE     CI_Lower     CI_Upper 
-#>   0.08936507   0.02728345   0.03397668   0.14624038
+#>   0.08936507   0.02694153   0.03810154   0.13933667
 sensewls_darfur$wls_data
 #> WLS_Estimate       Est_SE     CI_Lower     CI_Upper 
 #>   0.08936507   0.02616902   0.03616962   0.13764840
@@ -462,18 +464,18 @@ sensewls_darfur$wls_data
 ### Check robustness values
 output_customewights$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
-#>      0.02184304      0.13868612      0.05520000
+#>      0.02184304      0.13868612      0.06210000
 sensewls_darfur$RVs
 #>        wR2.YD.X        RV_{q=1} RV_{alpha=0.05} 
 #>      0.02184304      0.13868612      0.05820000
 
 ### Check covariate bounds
 output_customewights$Covariate_Bound_Estimates
-#>          Adjusted_Est Adjusted_SE     CI_Lower  CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
-#> female.1   0.06868699  0.02728790  0.013376600 0.1259592 0.01095435 0.1079491       female kd=1, ky=1
-#> female.2   0.06012361  0.02730074  0.004740441 0.1175715 0.01095435 0.2158723       female kd=1, ky=2
-#> female.3   0.05995600  0.02730102  0.004571410 0.1174074 0.02190869 0.1079678       female kd=2, ky=1
-#> female.4   0.04777793  0.02732422 -0.007568834 0.1054792 0.02190869 0.2158987       female kd=2, ky=2
+#>          Adjusted_Est Adjusted_SE     CI_Lower   CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
+#> female.1   0.06868699  0.02696367  0.017545801 0.11917446 0.01095435 0.1079491       female kd=1, ky=1
+#> female.2   0.06012361  0.02697772  0.009036409 0.11082472 0.01095435 0.2158723       female kd=1, ky=2
+#> female.3   0.05995600  0.02697802  0.008869897 0.11066129 0.02190869 0.1079678       female kd=2, ky=1
+#> female.4   0.04777793  0.02700297 -0.003231970 0.09878703 0.02190869 0.2158987       female kd=2, ky=2
 sensewls_darfur$Covariate_Bound_Estimates
 #>          Adjusted_Est Adjusted_SE     CI_Lower   CI_Upper   wR2.DZ.X wR2.YZ.DX Bounding_Var   Strength
 #> female.1   0.06868699  0.02596973  0.015446243 0.11735805 0.01095435 0.1079491       female kd=1, ky=1
