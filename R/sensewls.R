@@ -573,9 +573,9 @@ sensewls <- function(df, treatment, outcome, covars,
   if(inference %in% c("HC0", "HC1")){
 
     # Get sqrt(w)-transformed model
-    sqrtW <- diag(sqrt(weights))
-    sqrtw_X <- sqrtW %*% model.matrix(model)
-    sqrtw_y <- sqrtW %*% df[, outcome]
+    sqrtw <- sqrt(weights)
+    sqrtw_X <- sqrtw * model.matrix(model)
+    sqrtw_y <- sqrtw * df[, outcome]
     sqrtw_model <- lm(sqrtw_y ~ 0 + sqrtw_X)
 
     # Get unadjusted variance matrix

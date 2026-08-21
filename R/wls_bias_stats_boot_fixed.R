@@ -63,6 +63,9 @@ wls_bias_stats_boot_fixed <- function(weights, B, strata = NULL, par = F, ncpus 
 
     weights_boot <- df_boot$weights_vector
 
+    to_remove <- match("weights_vector", names(df_boot))
+    df_boot <- df_boot[, -to_remove]
+
     wls_bias_stats(outcome = outcome,
                    treatment = treatment,
                    df = df_boot,
